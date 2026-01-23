@@ -12,8 +12,27 @@ const AUTH_ROUTES = [
   ROUTES.RESET_PASSWORD,
 ];
 
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  "/",
+  "/external-request",
+  "/products",
+  "/solutions",
+  "/resources",
+];
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Check if it's a public route (exact match or starts with)
+  const isPublicPath = PUBLIC_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+  // Skip auth check for public routes
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
 
   const isAuthPath = AUTH_ROUTES.includes(
     pathname as (typeof AUTH_ROUTES)[number],

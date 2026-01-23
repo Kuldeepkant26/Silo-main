@@ -10,13 +10,13 @@ export function Tags() {
 
   return (
     <section className="flex flex-col">
-      <header className="flex justify-between px-8 pt-7 pb-2 md:-mx-8">
-        <h2 className="text-xl font-bold">{t("categories")}</h2>
+      <header className="flex justify-between items-center mb-6 px-8 md:-mx-8">
+        <h2 className="text-2xl font-bold text-[#171717]">{t("categories")}</h2>
 
         <CreateTag />
       </header>
 
-      <div className="mt-2 flex flex-col gap-y-4">
+      <div className="flex flex-col gap-y-4">
         <Suspense fallback={<TagsListSkeleton />}>
           <TagsList />
         </Suspense>

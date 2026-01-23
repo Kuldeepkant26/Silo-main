@@ -40,8 +40,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
       <body
+        suppressHydrationWarning
         className={cn(
           "bg-background min-h-screen font-sans antialiased",
           geist.variable,

@@ -94,7 +94,7 @@ export function CreateRequest() {
   return (
     <Drawer direction="right" open={showDialog} onOpenChange={setShowDialog}>
       <DrawerTrigger asChild>
-        <Button className="flex items-center gap-x-2">
+        <Button className="flex items-center gap-x-2 bg-[#1a1a1a] text-white hover:bg-[#333] px-6 py-3 rounded-lg text-sm font-semibold tracking-wide transition-colors">
           <Icons.add className="h-4 w-4" />
           {t("new_request")}
         </Button>

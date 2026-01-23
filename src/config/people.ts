@@ -15,7 +15,8 @@ export const ROLES: Item[] = [
     key: "owner",
     label: "owner",
     value: "owner",
-  },
+  }
+  
 ];
 
 export const SEARCH_PARAM_MEMBER_ID = "memberId";

@@ -11,25 +11,25 @@ export default function SettingsGeneralPage() {
   const t = useTranslations();
 
   return (
-    <section className="flex flex-col">
-      <header className="flex items-end justify-between border-b px-8 pt-7 pb-2">
+    <section className="flex flex-col p-10">
+      <header className="flex items-end justify-between mb-8">
         <div className="flex flex-col items-start gap-y-4">
           <BackButton
-            className="!px-0"
+            className="!px-0 text-[#1a1a1a] hover:text-[#333]"
             route={ROUTES.SETTINGS}
             label="back_to_settings"
           />
 
-          <h2 className="text-xl font-bold">{t("general")}</h2>
+          <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("general")}</h1>
         </div>
 
-        <Button disabled={true}>
+        <Button disabled={true} className="bg-[#1a1a1a] hover:bg-[#333]">
           <Icons.upgrade className="h-6 w-6" />
           {t("upgrade_to_pro")}
         </Button>
       </header>
 
-      <div className="mt-8 flex flex-col gap-y-4 px-2 md:px-8">
+      <div className="flex flex-col gap-6 max-w-[940px] w-full">
         <BillingPlan />
 
         <OrganizationDetails />

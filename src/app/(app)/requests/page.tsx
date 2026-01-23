@@ -9,14 +9,14 @@ export default function RequestsPage() {
   const t = useTranslations();
 
   return (
-    <section className="flex flex-col">
-      <header className="flex justify-between border-b px-8 pt-7 pb-2">
-        <h2 className="text-xl font-bold">{t("requests")}</h2>
+    <section className="flex flex-col p-10">
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("requests")}</h1>
 
         <CreateRequest />
       </header>
 
-      <div className="mt-8 grid grid-cols-1 gap-2 px-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <Suspense fallback={<RequestsListSkeleton />}>
           <RequestsList />
         </Suspense>

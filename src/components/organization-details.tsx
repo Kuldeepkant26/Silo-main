@@ -69,8 +69,8 @@ export function OrganizationDetails() {
   if (isPending) return <GeneralSettingsSkeleton />;
 
   return (
-    <div className="mt-8 flex flex-col gap-y-4">
-      <h1 className="text-primary font-bold">{t("your_organization")}</h1>
+    <div className="mt-8 flex flex-col gap-y-6">
+      <h2 className="text-2xl font-bold text-[#171717]">{t("your_organization")}</h2>
 
       <div className="grid grid-cols-1 pb-8">
         <Form {...form}>
@@ -83,13 +83,14 @@ export function OrganizationDetails() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("name")}</FormLabel>
+                  <FormLabel className="text-[#1a1a1a] font-medium">{t("name")}</FormLabel>
                   <FormControl>
                     <Input
                       id="name"
                       type="text"
                       required
                       autoComplete="name"
+                      className="border-[#e2e2e2] focus:border-[#1a1a1a]"
                       {...field}
                     />
                   </FormControl>
@@ -101,6 +102,7 @@ export function OrganizationDetails() {
             <Button
               disabled={isLoading || name === organization?.name}
               type="submit"
+              className="bg-[#1a1a1a] hover:bg-[#333] w-fit"
             >
               {isLoading ? <Spinner /> : t("update")}
             </Button>

@@ -78,7 +78,7 @@ export function CreateTag() {
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
-        <Button className="min-w-28">{t("create_tag")}</Button>
+        <Button className="min-w-28 bg-[#1a1a1a] hover:bg-[#333]">{t("create_tag")}</Button>
       </DrawerTrigger>
       <DrawerContent className="flex flex-col">
         <DrawerHeader>
@@ -86,7 +86,7 @@ export function CreateTag() {
             <Icons.close className="text-muted-foreground hover:text-primary h-4 w-4 cursor-pointer" />
           </DrawerClose>
 
-          <DrawerTitle className="flex justify-center text-2xl">
+          <DrawerTitle className="flex justify-center text-2xl text-[#1a1a1a]">
             {t("create_tag")}
           </DrawerTitle>
 
@@ -135,6 +135,7 @@ export function CreateTag() {
                   !tagForm.formState.isValid || createTagMutation.isPending
                 }
                 type="submit"
+                className="bg-[#1a1a1a] hover:bg-[#333]"
               >
                 {createTagMutation.isPending ? <Spinner /> : t("create")}
               </Button>

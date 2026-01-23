@@ -20,6 +20,14 @@ export const config = {
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day (session will be updated if it's older than this)
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
   databaseHooks: {
     session: {
       create: {
@@ -75,7 +83,10 @@ export const config = {
   ],
   secret: env.AUTH_SECRET,
   socialProviders: {},
-  trustedOrigins: ["https://silo-psi.vercel.app"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://silo-psi.vercel.app",
+  ],
 } satisfies BetterAuthOptions;
 
 export const auth = betterAuth(config);

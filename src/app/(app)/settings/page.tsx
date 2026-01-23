@@ -6,12 +6,12 @@ export default function SettingsPage() {
   const t = useTranslations();
 
   return (
-    <section className="flex flex-col">
-      <header className="flex justify-between border-b px-8 pt-7 pb-2">
-        <h2 className="text-xl font-bold">{t("settings")}</h2>
+    <section className="flex flex-col p-10">
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("settings")}</h1>
       </header>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 px-2 md:grid-cols-2 md:px-8">
+      <div className="flex flex-col gap-6 max-w-[940px] w-full">
         <SettingsList />
       </div>
     </section>

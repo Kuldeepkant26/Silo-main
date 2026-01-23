@@ -21,8 +21,8 @@ export function SidebarNav() {
   const { data: auth } = authClient.useSession();
 
   return (
-    <div className="flex h-full w-full flex-col justify-between gap-y-4">
-      <div className="w-full">
+    <div className="flex h-full w-full flex-col justify-between gap-y-2">
+      <div className="w-full flex flex-col gap-2 flex-1">
         {SIDEBAR_NAV_ITEMS.map((item, index) => {
           const Icon = Icons[item.icon] ?? Icons.chevronRight;
 
@@ -31,9 +31,10 @@ export function SidebarNav() {
               <TooltipTrigger asChild>
                 <Button
                   className={cn(
-                    "hover:text-primary relative h-auto w-full items-center justify-start rounded-none border-b py-4 transition-none hover:bg-transparent",
+                    "relative h-auto w-full items-center justify-start rounded-md py-3 px-4 transition-colors text-[#333] hover:bg-black/[0.06] text-lg font-medium bg-transparent border-none",
                     {
-                      "text-muted-foreground hover:text-muted-foreground cursor-not-allowed":
+                      "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white": pathname.includes(item.href),
+                      "text-[#999] hover:text-[#999] cursor-not-allowed opacity-60":
                         !auth?.session.activeOrganizationId || item.disabled,
                     },
                   )}
@@ -41,27 +42,15 @@ export function SidebarNav() {
                     !auth?.session.activeOrganizationId || item.disabled
                   }
                   variant="ghost"
-                  asChild
+                  asChild={!(!auth?.session.activeOrganizationId || item.disabled)}
                 >
-                  <Link className="!pl-6 text-sm font-medium" href={item.href}>
-                    <Icon
-                      className={cn("h-4 w-4", {
-                        "text-primary font-bold": pathname.includes(item.href),
-                      })}
-                    />
-
-                    <h4
-                      className={cn({
-                        "text-primary font-bold": pathname.includes(item.href),
-                      })}
-                    >
-                      {t(item.title)}
-                    </h4>
+                  <Link className="text-lg font-medium" href={item.href}>
+                    <h4>{t(item.title)}</h4>
 
                     {item.tag && (
                       <Badge
                         variant="outline"
-                        className="border-text-muted-foreground text-muted-foreground absolute top-2 right-2"
+                        className="border-[#333] text-[#333] absolute top-2 right-2 text-xs"
                       >
                         {t(item.tag)}
                       </Badge>
@@ -78,8 +67,10 @@ export function SidebarNav() {
           );
         })}
       </div>
-      <div className="flex items-center justify-start border-t px-4 py-8">
-        <UserAccountNav user={auth?.user} />
+      <div className="mt-auto">
+        <div className="flex items-center gap-3 p-3 px-4 bg-[#b8b8b8] rounded-xl">
+          <UserAccountNav user={auth?.user} />
+        </div>
       </div>
     </div>
   );

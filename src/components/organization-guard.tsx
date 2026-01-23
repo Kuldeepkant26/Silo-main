@@ -56,10 +56,9 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
 
     const { name } = data;
 
-    const { error } = await authClient.organization.create({
+    const { error, data: orgData } = await authClient.organization.create({
       name,
       slug: name.toLowerCase().replaceAll(" ", "-"),
-      keepCurrentActiveOrganization: false,
     });
 
     if (error) {
@@ -69,13 +68,19 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
       return;
     }
 
+    // Explicitly set the newly created organization as active
+    if (orgData?.id) {
+      await authClient.organization.setActive({
+        organizationId: orgData.id,
+      });
+    }
+
     toast.success(t("create_organization_success", { name }));
     form.reset();
     setIsLoading(false);
 
-    setTimeout(() => {
-      location.reload();
-    }, 1000);
+    // Navigate with hard reload to ensure session is refreshed
+    window.location.href = "/requests";
   };
 
   return (
@@ -98,7 +103,7 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
                   <FormField
                     control={form.control}
                     name="name"
-                    render={({ field }) => (
+                    render={({field }) => (
                       <FormItem>
                         <FormLabel>{t("name")}*</FormLabel>
 

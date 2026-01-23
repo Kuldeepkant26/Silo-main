@@ -11,15 +11,19 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-48 flex-col border-r pt-3 md:flex">
-        <header className="flex h-full flex-col items-center justify-center gap-y-3">
-          <Logo width={48} height={48} className="mr-auto ml-6" />
+    <div className="flex min-h-screen bg-[#f5f5f5]">
+      <aside className="hidden w-[280px] flex-col bg-[#d1d1d1] p-5 md:flex sticky top-0 h-screen overflow-y-auto flex-shrink-0">
+        <header className="flex flex-col gap-y-3 h-full">
+          <div className="flex items-center justify-between gap-3 mb-8">
+            <div className="flex-1 bg-[#b8b8b8] rounded-xl py-4 px-[18px] text-center">
+              <Logo width={48} height={48} className="mx-auto" />
+            </div>
+          </div>
 
           <SidebarNav />
         </header>
       </aside>
-      <main className="relative flex w-full flex-1 flex-col overflow-hidden">
+      <main className="relative flex w-full flex-1 flex-col overflow-y-auto">
         <AuthGuard>
           <OrganizationGuard>{children}</OrganizationGuard>
         </AuthGuard>

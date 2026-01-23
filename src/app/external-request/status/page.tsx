@@ -3,12 +3,14 @@
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
+type Status = "submitted" | "awaiting-review" | "resolved";
+
 export default function ExternalRequestStatusPage() {
   const searchParams = useSearchParams();
   const referenceId = searchParams.get("referenceId") || "HGHFE45";
 
   // Status: 'submitted', 'awaiting-review', 'resolved'
-  const currentStatus = "awaiting-review";
+  const currentStatus = "awaiting-review" as Status;
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-10 py-[60px] font-[system-ui]">

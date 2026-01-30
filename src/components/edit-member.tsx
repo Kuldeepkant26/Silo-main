@@ -101,7 +101,7 @@ export function EditMember({ member, onOpenChange }: EditMemberProps) {
 
     editMember({
       id: currentMember.id,
-      role: values.role,
+      role: values.role as "owner" | "admin" | "member",
       teams: values.teams,
     });
   };

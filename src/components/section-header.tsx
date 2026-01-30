@@ -16,3 +16,8 @@ export function SectionHeader({ component }: SectionHeaderProps) {
     </header>
   );
 }
+
+
+
+
+

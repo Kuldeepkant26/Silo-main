@@ -3,10 +3,25 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
 import { env } from "~/env";
 
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
+
+// Initialize Supabase client for file uploads
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+interface UploadedFile {
+  file: File;
+  key: string;
+  id: string;
+  uploaded: boolean;
+  error?: string;
+}
 
 export default function ExternalRequestFormPage() {
   const router = useRouter();
@@ -19,7 +34,7 @@ export default function ExternalRequestFormPage() {
   const [description, setDescription] = useState("");
   const [objective, setObjective] = useState("");
   const [customObjective, setCustomObjective] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -39,13 +54,77 @@ export default function ExternalRequestFormPage() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setAttachments([...attachments, ...files]);
     setUploading(true);
+    setError("");
 
-    // Simulate upload
-    setTimeout(() => {
-      setUploading(false);
-    }, 1000);
+    const newUploadedFiles: UploadedFile[] = [];
+
+    for (const file of files) {
+      const fileId = crypto.randomUUID();
+      // Create a unique filename with timestamp to avoid collisions
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "_");
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const filePath = `${timestamp}_${sanitizedFileName}`;
+      
+      try {
+        // Upload file to Supabase storage
+        const { data, error: uploadError } = await supabase.storage
+          .from("ticket-attachments")
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          newUploadedFiles.push({
+            file,
+            key: "",
+            id: fileId,
+            uploaded: false,
+            error: uploadError.message,
+          });
+        } else {
+          console.log("Upload successful:", data);
+          newUploadedFiles.push({
+            file,
+            key: `ticket-attachments/${data.path}`,
+            id: fileId,
+            uploaded: true,
+          });
+        }
+      } catch (err) {
+        console.error("Upload exception:", err);
+        newUploadedFiles.push({
+          file,
+          key: "",
+          id: fileId,
+          uploaded: false,
+          error: err instanceof Error ? err.message : "Upload failed",
+        });
+      }
+    }
+
+    setUploadedFiles([...uploadedFiles, ...newUploadedFiles]);
+    setUploading(false);
+
+    // Check if any uploads failed
+    const failedUploads = newUploadedFiles.filter((f) => !f.uploaded);
+    if (failedUploads.length > 0) {
+      setError(`Failed to upload ${failedUploads.length} file(s). Please try again.`);
+    }
+  };
+
+  const handleRemoveFile = async (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    
+    // If the file was uploaded, delete it from Supabase
+    if (fileToRemove?.uploaded && fileToRemove.key) {
+      const filePath = fileToRemove.key.replace("ticket-attachments/", "");
+      await supabase.storage.from("ticket-attachments").remove([filePath]);
+    }
+    
+    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -66,6 +145,9 @@ export default function ExternalRequestFormPage() {
       return;
     }
 
+    // Check if all files were uploaded successfully
+    const successfulUploads = uploadedFiles.filter((f) => f.uploaded);
+
     setIsSubmitting(true);
     setError("");
 
@@ -80,9 +162,9 @@ export default function ExternalRequestFormPage() {
           name,
           email,
           description: `${description}\n\nObjective: ${objective === "Custom" ? customObjective : objective}`,
-          attachments: attachments.map((file) => ({
-            Key: `ticket-attachments/${file.name}`,
-            Id: crypto.randomUUID(),
+          attachments: successfulUploads.map((uploadedFile) => ({
+            Key: uploadedFile.key,
+            Id: uploadedFile.id,
           })),
         }),
       });
@@ -221,19 +303,34 @@ export default function ExternalRequestFormPage() {
                     </svg>
                   </div>
                   {uploading && (
-                    <span className="block mt-2 text-xs">Uploading...</span>
+                    <span className="block mt-2 text-xs text-center">Uploading...</span>
                   )}
                 </label>
               </div>
-              {attachments.length > 0 && (
+              {uploadedFiles.length > 0 && (
                 <div className="mt-[15px] flex flex-col gap-2">
-                  {attachments.map((file, index) => (
+                  {uploadedFiles.map((uploadedFile, index) => (
                     <div
-                      key={index}
-                      className="py-[10px] px-[15px] bg-[#f3f4f6] rounded-lg text-sm text-[#1a1a1a] flex items-center gap-2"
+                      key={uploadedFile.id}
+                      className={`py-[10px] px-[15px] rounded-lg text-sm text-[#1a1a1a] flex items-center justify-between ${
+                        uploadedFile.uploaded ? "bg-[#f3f4f6]" : "bg-red-50"
+                      }`}
                     >
-                      {file.name}
-                      <span className="ml-2 text-[#4CAF50]">✓</span>
+                      <div className="flex items-center gap-2">
+                        {uploadedFile.file.name}
+                        {uploadedFile.uploaded ? (
+                          <span className="ml-2 text-[#4CAF50]">✓</span>
+                        ) : (
+                          <span className="ml-2 text-red-500">✗</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="text-gray-500 hover:text-red-500 transition-colors"
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>

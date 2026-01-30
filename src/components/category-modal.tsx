@@ -23,7 +23,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
     undefined,
     { enabled: isOpen }
   );
-  
+     
   const [name, setName] = useState("");
   const [assignedTeamId, setAssignedTeamId] = useState("");
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
@@ -40,7 +40,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
 
     setIsLoading(true);
     setError("");
-
+         
     try {
       const response = await fetch(`${API_BASE_URL}/api/internal/create-category`, {
         method: "POST",
@@ -79,7 +79,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
       setIsLoading(false);
     }
   };
-
+    
   const handleCancel = () => {
     setName("");
     setAssignedTeamId("");
@@ -135,14 +135,14 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
                 className="w-full px-[18px] py-4 text-[15px] text-[#1a1a1a] border-[1.5px] border-[#d1d5db] rounded-[10px] outline-none transition-all duration-200 font-[system-ui] bg-white cursor-pointer appearance-none pr-10 hover:border-[#a8aeb8] focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
                 value={assignedTeamId}
                 onChange={(e) => setAssignedTeamId(e.target.value)}
-                disabled={teamsLoading}
+                disabled={teamsLoading || (!teamsLoading && (teams ?? []).length === 0)}
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "right 16px center",
                 }}
               >
-                <option value="">Select a team</option>
+                <option value="">{!teamsLoading && (teams ?? []).length === 0 ? "No Teams" : "Select a team"}</option>
                 {(teams ?? []).map((team) => (
                   <option key={team.id} value={team.id}>
                     {team.name}
@@ -158,6 +158,11 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
                 </div>
               )}
             </div>
+            {!teamsLoading && (teams ?? []).length === 0 && (
+              <p className="text-sm text-amber-600 mt-2">
+                Please create a Team before creating a category
+              </p>
+            )}
           </div>
 
           <p className="text-sm text-[#6b7280] leading-relaxed mb-6">
@@ -181,7 +186,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
               />
             </button>
           </div>
-
+                                                 
           {/* Auto Reply Message Input */}
           {autoReplyEnabled && (
             <div className="mt-4">
@@ -212,7 +217,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
             <button
               className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-[#1a1a1a] bg-[#1a1a1a] text-white uppercase hover:bg-[#333] hover:border-[#333] active:bg-[#1a1a1a] active:transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
-              disabled={!name.trim() || isLoading}
+              disabled={!name.trim() || isLoading || (!teamsLoading && (teams ?? []).length === 0)}
             >
               {isLoading ? "SAVING..." : "SAVE"}
             </button>

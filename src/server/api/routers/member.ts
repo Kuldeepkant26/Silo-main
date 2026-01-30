@@ -55,7 +55,6 @@ export const memberRouter = createTRPCRouter({
               ),
             );
         }
-
         if (teamsToAdd.length > 0) {
           await db.insert(teamMembers).values(
             teamsToAdd.map((teamId) => ({
@@ -101,7 +100,6 @@ export const memberRouter = createTRPCRouter({
           memberData.teams.push(row.team);
         }
       }
-
       return Array.from(membersMap.values());
     },
   ),
@@ -130,3 +128,4 @@ export const memberRouter = createTRPCRouter({
       return memberData;
     }),
 });
+

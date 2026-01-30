@@ -5,11 +5,9 @@ import { Fragment, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-
 import type { Tag } from "~/server/db/schema";
 import { SEARCH_PARAM_TAG_ID } from "~/config/settings";
 import { api } from "~/trpc/react";
-
 import { EditTag } from "./edit-tag";
 import { Icons } from "./icons";
 import { Spinner } from "./spinner";
@@ -17,7 +15,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
   Dialog,
-  DialogClose,
+  DialogClose,                                    
   DialogContent,
   DialogDescription,
   DialogFooter,

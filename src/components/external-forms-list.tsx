@@ -249,12 +249,14 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                     >
                       Delete
                     </button>
-                    <button
-                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-[#333] cursor-pointer transition-colors hover:bg-[#f5f5f5]"
-                      onClick={() => handleCopyLink(form)}
-                    >
-                      Copy link
-                    </button>
+                    {form.reviewerId && (
+                      <button
+                        className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-[#333] cursor-pointer transition-colors hover:bg-[#f5f5f5]"
+                        onClick={() => handleCopyLink(form)}
+                      >
+                        Copy link
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -366,7 +368,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
           </div>
         </div>
       )}
-
+                                                   
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -381,3 +383,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
     </>
   );
 }
+
+
+
+

@@ -77,7 +77,7 @@ export function EditTeam({ team, onOpenChange }: EditTeamProps) {
       onOpenChange(false);
     },
   });
-
+                                                                                                                                 
   useEffect(() => {
     if (currentTeam) {
       form.reset({

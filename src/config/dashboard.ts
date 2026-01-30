@@ -7,6 +7,11 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     icon: "tickets",
   },
   {
+    title: "review",
+    href: "/review",
+    icon: "checkCircle",
+  },
+  {
     title: "people",
     href: "/people",
     icon: "user",

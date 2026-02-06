@@ -15,15 +15,15 @@ export default function SettingsGeneralPage() {
       <header className="flex items-end justify-between mb-8">
         <div className="flex flex-col items-start gap-y-4">
           <BackButton
-            className="!px-0 text-[#1a1a1a] hover:text-[#333]"
+            className="!px-0 text-foreground hover:text-foreground/80"
             route={ROUTES.SETTINGS}
             label="back_to_settings"
           />
 
-          <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("general")}</h1>
+          <h1 className="text-4xl font-bold text-foreground">{t("general")}</h1>
         </div>
 
-        <Button disabled={true} className="bg-[#1a1a1a] hover:bg-[#333]">
+        <Button disabled={true} className="bg-primary hover:bg-primary/90">
           <Icons.upgrade className="h-6 w-6" />
           {t("upgrade_to_pro")}
         </Button>

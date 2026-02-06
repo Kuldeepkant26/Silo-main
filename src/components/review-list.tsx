@@ -7,6 +7,7 @@ import { Info } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
+import { api } from "~/trpc/react";
 
 import { Icons } from "./icons";
 import { Button } from "./ui/button";
@@ -55,6 +56,10 @@ interface Ticket {
   workflowStatus: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null;
   legalOwnerId: string | null;
   summary: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  attachments: string[] | null;
+  reviewed: boolean;
   createdAt: string;
   updatedAt: string | null;
   sourceType: "EXTERNAL" | "INTERNAL";
@@ -76,6 +81,9 @@ interface ReviewItem {
   title: string; // requestForm.name
   email: string;
   createdAt: string;
+  startDate: string | null;
+  endDate: string | null;
+  reviewed: boolean;
   urgency: "LOW" | "HIGH" | "MID" | null;
   workflowStatus: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null;
   category: string | null;
@@ -89,6 +97,12 @@ export function ReviewList() {
   const organizationId = auth?.session?.activeOrganizationId;
   const userEmail = auth?.user?.email;
 
+  // Check if current user is admin/owner
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    enabled: !!organizationId,
+  });
+  const isAdminOrOwner = userRole?.isAdmin || userRole?.isOwner;
+
   // State for API data
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,15 +114,17 @@ export function ReviewList() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [selectedFilters, setSelectedFilters] = useState<{
-    period: string;
     priority: string;
+    status: string;
     category: string;
-    team: string;
+    sourceType: string;
+    reviewed: string;
   }>({
-    period: "",
     priority: "",
+    status: "",
     category: "",
-    team: "",
+    sourceType: "",
+    reviewed: "",
   });
   const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
@@ -153,6 +169,10 @@ export function ReviewList() {
           if (currentUser) {
             console.log("Found reviewer:", currentUser);
             setCurrentReviewerId(currentUser.id);
+          } else if (isAdminOrOwner && reviewersList.length > 0) {
+            // Admin/Owner not in reviewers list - use first reviewer to see all requests
+            console.log("Admin/Owner not in reviewers list, using first reviewer");
+            setCurrentReviewerId(reviewersList[0].id);
           } else {
             console.log("Current user not found in reviewers list");
             setLoading(false);
@@ -173,7 +193,7 @@ export function ReviewList() {
       setLoading(false);
       setError("Error connecting to server");
     }
-  }, [organizationId, userEmail]);
+  }, [organizationId, userEmail, isAdminOrOwner]);
 
   // Fetch all tickets for review
   const fetchTickets = useCallback(async () => {
@@ -239,10 +259,21 @@ export function ReviewList() {
         : (ticket.requestForm?.name || ""),
       email: ticket.email || "",
       createdAt: ticket.createdAt,
+      startDate: ticket.startDate,
+      endDate: ticket.endDate,
+      reviewed: ticket.reviewed,
       urgency: ticket.priority,
       workflowStatus: ticket.workflowStatus,
       category: ticket.category?.name || null,
     }));
+  }, [tickets]);
+
+  // Get unique categories for filter dropdown
+  const uniqueCategories = useMemo(() => {
+    const categories = tickets
+      .map((t) => t.category?.name)
+      .filter((c): c is string => !!c);
+    return [...new Set(categories)];
   }, [tickets]);
 
   const pendingCount = tickets.length;
@@ -258,7 +289,8 @@ export function ReviewList() {
         (item) =>
           item.type.toLowerCase().includes(query) ||
           item.title.toLowerCase().includes(query) ||
-          item.email.toLowerCase().includes(query)
+          item.email.toLowerCase().includes(query) ||
+          (item.category && item.category.toLowerCase().includes(query))
       );
     }
 
@@ -267,13 +299,36 @@ export function ReviewList() {
       items = items.filter((item) => item.urgency === selectedFilters.priority);
     }
 
+    // Apply status filter
+    if (selectedFilters.status) {
+      items = items.filter((item) => item.workflowStatus === selectedFilters.status);
+    }
+
     // Apply category filter
     if (selectedFilters.category) {
       items = items.filter((item) => item.category === selectedFilters.category);
     }
 
+    // Apply source type filter
+    if (selectedFilters.sourceType) {
+      items = items.filter((item) => item.type === selectedFilters.sourceType);
+    }
+
+    // Apply reviewed filter
+    if (selectedFilters.reviewed) {
+      const isReviewed = selectedFilters.reviewed === "true";
+      items = items.filter((item) => item.reviewed === isReviewed);
+    }
+
+    // Apply sort
+    items.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
     return items;
-  }, [reviewItems, searchQuery, selectedFilters]);
+  }, [reviewItems, searchQuery, selectedFilters, sortOrder]);
 
   const handleSelectAll = () => {
     if (selectedItems.length === filteredItems.length) {
@@ -324,18 +379,18 @@ export function ReviewList() {
   const getUrgencyBadge = (urgency: "LOW" | "HIGH" | "MID" | null) => {
     if (!urgency) {
       return (
-        <Badge className="bg-gray-400 text-white font-medium px-3 py-1 rounded">
+        <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 font-medium px-3 py-1 rounded-md min-w-[70px] justify-center">
           NOT SET
         </Badge>
       );
     }
     const colorMap = {
-      LOW: "bg-[#2e7d32]",
-      MID: "bg-[#f9a825]",
-      HIGH: "bg-[#d32f2f]",
+      LOW: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+      MID: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+      HIGH: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
     };
     return (
-      <Badge className={cn("text-white font-medium px-3 py-1 rounded", colorMap[urgency])}>
+      <Badge className={cn("font-medium px-3 py-1 rounded-md min-w-[70px] justify-center", colorMap[urgency])}>
         {urgency}
       </Badge>
     );
@@ -344,14 +399,14 @@ export function ReviewList() {
   const getStatusBadge = (status: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null) => {
     if (!status) return null;
     const colorMap = {
-      OPEN: "bg-[#2196f3]",
-      IN_PROGRESS: "bg-[#ff9800]",
-      DONE: "bg-[#4caf50]",
-      OVERDUE: "bg-[#f44336]",
-      REOPEN: "bg-[#9c27b0]",
+      OPEN: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+      IN_PROGRESS: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+      DONE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+      OVERDUE: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+      REOPEN: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
     };
     return (
-      <Badge className={cn("text-white font-medium px-3 py-1 rounded", colorMap[status])}>
+      <Badge className={cn("font-medium px-3 py-1 rounded-md min-w-[80px] justify-center", colorMap[status])}>
         {status}
       </Badge>
     );
@@ -400,7 +455,7 @@ export function ReviewList() {
             fetchReviewers();
           }}
         >
-          {t("retry") || "Retry"}
+          Retry
         </Button>
       </div>
     );
@@ -422,6 +477,101 @@ export function ReviewList() {
             />
           </div>
 
+          {/* Source Type Filter */}
+          <Select 
+            value={selectedFilters.sourceType} 
+            onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, sourceType: value === "all" ? "" : value }))}
+          >
+            <SelectTrigger className="w-[120px] rounded-full border-[#ccc]">
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              <SelectItem value="INTERNAL">Internal</SelectItem>
+              <SelectItem value="EXTERNAL">External</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Priority Filter */}
+          <Select 
+            value={selectedFilters.priority} 
+            onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, priority: value === "all" ? "" : value }))}
+          >
+            <SelectTrigger className="w-[120px] rounded-full border-[#ccc]">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priority</SelectItem>
+              <SelectItem value="HIGH">High</SelectItem>
+              <SelectItem value="MID">Medium</SelectItem>
+              <SelectItem value="LOW">Low</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Status Filter */}
+          <Select 
+            value={selectedFilters.status} 
+            onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, status: value === "all" ? "" : value }))}
+          >
+            <SelectTrigger className="w-[130px] rounded-full border-[#ccc]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="OPEN">Open</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="DONE">Done</SelectItem>
+              <SelectItem value="OVERDUE">Overdue</SelectItem>
+              <SelectItem value="REOPEN">Reopen</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Category Filter */}
+          {uniqueCategories.length > 0 && (
+            <Select 
+              value={selectedFilters.category} 
+              onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}
+            >
+              <SelectTrigger className="w-[140px] rounded-full border-[#ccc]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Reviewed Filter */}
+          <Select 
+            value={selectedFilters.reviewed} 
+            onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewed: value === "all" ? "" : value }))}
+          >
+            <SelectTrigger className="w-[130px] rounded-full border-[#ccc]">
+              <SelectValue placeholder="Reviewed" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="true">Reviewed</SelectItem>
+              <SelectItem value="false">Not Reviewed</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters Button */}
+          {(selectedFilters.priority || selectedFilters.status || selectedFilters.category || selectedFilters.sourceType || selectedFilters.reviewed) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedFilters({ priority: "", status: "", category: "", sourceType: "", reviewed: "" })}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Icons.close className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          )}
+
           {/* Sort Dropdown */}
           <div className="ml-auto flex items-center gap-2">
             <Select value={sortOrder} onValueChange={(value: SortOrder) => setSortOrder(value)}>
@@ -433,15 +583,12 @@ export function ReviewList() {
                 <SelectItem value="oldest">{t("oldest_first")}</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Icons.arrowUpDown className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
         {/* Pending Requests Banner */}
-        <div className="flex items-center gap-3 bg-[#e8e8e8] rounded-lg px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-[#333]">
+        <div className="flex items-center gap-3 bg-muted dark:bg-muted/50 rounded-lg px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-foreground">
             <Info className="h-4 w-4" />
             <span>
               {pendingCount} {t("requests_pending_to_be_reviewed")}
@@ -451,23 +598,25 @@ export function ReviewList() {
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden bg-white">
+      <div className="border rounded-lg overflow-hidden bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="bg-white hover:bg-white border-b">
+            <TableRow className="bg-card hover:bg-card border-b">
               <TableHead className="w-12"></TableHead>
-              <TableHead className="font-bold text-[#333]">{t("type")}</TableHead>
-              <TableHead className="font-bold text-[#333]">Title</TableHead>
-              <TableHead className="font-bold text-[#333]">Email</TableHead>
-              <TableHead className="font-bold text-[#333]">Created At</TableHead>
-              <TableHead className="font-bold text-[#333]">{t("urgency")}</TableHead>
-              <TableHead className="font-bold text-[#333]">Status</TableHead>
+              <TableHead className="font-bold text-foreground">Source</TableHead>
+              <TableHead className="font-bold text-foreground">Title</TableHead>
+              <TableHead className="font-bold text-foreground">Email</TableHead>
+              <TableHead className="font-bold text-foreground">Category</TableHead>
+              <TableHead className="font-bold text-foreground">Created At</TableHead>
+              <TableHead className="font-bold text-foreground">Priority</TableHead>
+              <TableHead className="font-bold text-foreground">Status</TableHead>
+              <TableHead className="font-bold text-foreground">Reviewed</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   {t("review_list_not_found")}
                 </TableCell>
               </TableRow>
@@ -488,12 +637,34 @@ export function ReviewList() {
                       <Icons.edit className="h-4 w-4" />
                     </Button>
                   </TableCell>
-                  <TableCell className="font-medium">{item.type}</TableCell>
-                  <TableCell>{item.title}</TableCell>
-                  <TableCell>{item.email}</TableCell>
+                  <TableCell className="font-medium">
+                    <Badge variant="outline" className={cn(
+                      "font-medium",
+                      item.type === "INTERNAL" 
+                        ? "border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300" 
+                        : "border-green-300 text-green-700 dark:border-green-700 dark:text-green-300"
+                    )}>
+                      {item.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{item.title || "-"}</TableCell>
+                  <TableCell className="max-w-[180px] truncate">{item.email}</TableCell>
+                  <TableCell>{item.category || "-"}</TableCell>
                   <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>{getUrgencyBadge(item.urgency)}</TableCell>
                   <TableCell>{getStatusBadge(item.workflowStatus)}</TableCell>
+                  <TableCell>
+                    {item.reviewed ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        <Icons.checkCircle className="h-3 w-3 mr-1" />
+                        Yes
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        No
+                      </Badge>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

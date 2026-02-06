@@ -199,11 +199,11 @@ export function UserRegistrationFlow() {
   // Render stepper
   const renderStepper = () => (
     <div className="flex items-center gap-3">
-      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.YOU ? "text-[#1a1a1a] underline underline-offset-4" : currentStep > STEPS.YOU ? "text-gray-500" : "text-gray-400"}`}>
+      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.YOU ? "text-foreground underline underline-offset-4" : currentStep > STEPS.YOU ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
         You
       </span>
-      <span className="text-gray-400">→</span>
-      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.SECURITY ? "text-[#1a1a1a] underline underline-offset-4" : "text-gray-400"}`}>
+      <span className="text-muted-foreground">→</span>
+      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.SECURITY ? "text-foreground underline underline-offset-4" : "text-muted-foreground/60"}`}>
         Security
       </span>
     </div>
@@ -212,7 +212,7 @@ export function UserRegistrationFlow() {
   // Illustrations
   const renderUserIllustration = () => (
     <div className="flex h-80 w-80 items-center justify-center rounded-[20px]">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#1a1a1a" strokeWidth="1.5" className="h-44 w-44">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
         <circle cx="50" cy="35" r="18" />
         <path d="M20 85c0-16.57 13.43-30 30-30s30 13.43 30 30" strokeLinecap="round" />
       </svg>
@@ -221,10 +221,10 @@ export function UserRegistrationFlow() {
 
   const renderLockIllustration = () => (
     <div className="flex h-80 w-80 items-center justify-center rounded-[20px]">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#1a1a1a" strokeWidth="1.5" className="h-44 w-44">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
         <rect x="25" y="45" width="50" height="40" rx="5" />
         <path d="M35 45V35c0-8.28 6.72-15 15-15s15 6.72 15 15v10" strokeLinecap="round" />
-        <circle cx="50" cy="65" r="5" fill="#1a1a1a" />
+        <circle cx="50" cy="65" r="5" fill="currentColor" />
       </svg>
     </div>
   );
@@ -236,16 +236,16 @@ export function UserRegistrationFlow() {
       return (
         <>
           <div className="flex-1 max-w-[520px] w-full pl-10">
-            <h1 className="text-[32px] font-semibold text-[#1a1a1a] mb-2.5 tracking-tight leading-tight">
+            <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
               Tell us about you
             </h1>
 
             <form onSubmit={handleUserInfoSubmit} className="flex flex-col gap-6 mt-6">
               <div className="flex flex-col gap-2.5">
-                <label className="text-[15px] font-medium text-[#1a1a1a]">Email</label>
+                <label className="text-[15px] font-medium text-foreground">Email</label>
                 <input
                   type="email"
-                  className="w-full px-5 py-4 text-base text-[#1a1a1a] border-[1.5px] border-gray-200 rounded-[10px] outline-none transition-all hover:border-gray-300 focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.06)]"
+                  className="w-full px-5 py-4 text-base text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -256,10 +256,10 @@ export function UserRegistrationFlow() {
 
               <div className="flex gap-5">
                 <div className="flex-1 flex flex-col gap-2.5">
-                  <label className="text-[15px] font-medium text-[#1a1a1a]">First name</label>
+                  <label className="text-[15px] font-medium text-foreground">First name</label>
                   <input
                     type="text"
-                    className="w-full px-5 py-4 text-base text-[#1a1a1a] border-[1.5px] border-gray-200 rounded-[10px] outline-none transition-all hover:border-gray-300 focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.06)]"
+                    className="w-full px-5 py-4 text-base text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder=""
@@ -267,10 +267,10 @@ export function UserRegistrationFlow() {
                   />
                 </div>
                 <div className="flex-1 flex flex-col gap-2.5">
-                  <label className="text-[15px] font-medium text-[#1a1a1a]">Last name</label>
+                  <label className="text-[15px] font-medium text-foreground">Last name</label>
                   <input
                     type="text"
-                    className="w-full px-5 py-4 text-base text-[#1a1a1a] border-[1.5px] border-gray-200 rounded-[10px] outline-none transition-all hover:border-gray-300 focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.06)]"
+                    className="w-full px-5 py-4 text-base text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder=""
@@ -282,7 +282,7 @@ export function UserRegistrationFlow() {
               <button
                 type="submit"
                 disabled={!email || !firstName || !lastName}
-                className="inline-flex items-center justify-center px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-white bg-[#1a1a1a] border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-[#333] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+                className="inline-flex items-center justify-center px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-primary-foreground bg-primary border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
               >
                 CONTINUE
               </button>
@@ -311,20 +311,20 @@ export function UserRegistrationFlow() {
                 </svg>
                 Back
               </button>
-              <h1 className="text-[32px] font-semibold text-[#1a1a1a] mb-2.5 tracking-tight leading-tight">
+              <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
                 Set your password
               </h1>
-              <p className="text-base text-gray-500 mb-7 leading-relaxed">
+              <p className="text-base text-muted-foreground mb-7 leading-relaxed">
                 Create a strong password with at least 8 characters
               </p>
 
               <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2.5">
-                  <label className="text-[15px] font-medium text-[#1a1a1a]">Password</label>
+                  <label className="text-[15px] font-medium text-foreground">Password</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      className="w-full px-5 py-4 pr-12 text-base text-[#1a1a1a] border-[1.5px] border-gray-200 rounded-[10px] outline-none transition-all hover:border-gray-300 focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.06)]"
+                      className="w-full px-5 py-4 pr-12 text-base text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
@@ -350,13 +350,13 @@ export function UserRegistrationFlow() {
                       )}
                     </button>
                   </div>
-                  <p className="text-sm text-gray-400">Must be at least 8 characters</p>
+                  <p className="text-sm text-muted-foreground">Must be at least 8 characters</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={password.length < 8}
-                  className="inline-flex items-center justify-center px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-white bg-[#1a1a1a] border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-[#333] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+                  className="inline-flex items-center justify-center px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-primary-foreground bg-primary border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                 >
                   CONTINUE
                 </button>
@@ -383,20 +383,20 @@ export function UserRegistrationFlow() {
                 </svg>
                 Back
               </button>
-              <h1 className="text-[32px] font-semibold text-[#1a1a1a] mb-2.5 tracking-tight leading-tight">
+              <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
                 Confirm your password
               </h1>
-              <p className="text-base text-gray-500 mb-7 leading-relaxed">
+              <p className="text-base text-muted-foreground mb-7 leading-relaxed">
                 Please re-enter your password to confirm
               </p>
 
               <form onSubmit={handleConfirmPasswordSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2.5">
-                  <label className="text-[15px] font-medium text-[#1a1a1a]">Confirm password</label>
+                  <label className="text-[15px] font-medium text-foreground">Confirm password</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      className="w-full px-5 py-4 pr-12 text-base text-[#1a1a1a] border-[1.5px] border-gray-200 rounded-[10px] outline-none transition-all hover:border-gray-300 focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,0.06)]"
+                      className="w-full px-5 py-4 pr-12 text-base text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter your password"
@@ -432,7 +432,7 @@ export function UserRegistrationFlow() {
                 <button
                   type="submit"
                   disabled={!confirmPassword || confirmPassword !== password || isLoading}
-                  className="inline-flex items-center justify-center gap-2 px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-white bg-[#1a1a1a] border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-[#333] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-primary-foreground bg-primary border-none rounded-full cursor-pointer transition-all w-fit mt-2.5 hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                 >
                   {isLoading && <Spinner className="h-4 w-4" />}
                   CREATE ACCOUNT
@@ -451,7 +451,7 @@ export function UserRegistrationFlow() {
   };
 
   return (
-    <div className="min-h-dvh bg-white flex flex-col font-sans overflow-x-hidden">
+    <div className="min-h-dvh bg-background flex flex-col font-sans overflow-x-hidden">
       {/* Header */}
       <header className="flex justify-between items-center px-[60px] py-8 w-full shrink-0 relative">
         <div className="flex items-center gap-12">
@@ -473,10 +473,10 @@ export function UserRegistrationFlow() {
 
       {/* Footer */}
       <footer className="flex items-center justify-between px-[60px] py-4 shrink-0">
-        <button className="bg-transparent border-none text-sm text-gray-500 cursor-pointer hover:text-gray-700">
+        <button className="bg-transparent border-none text-sm text-muted-foreground cursor-pointer hover:text-foreground">
           English
         </button>
-        <button className="w-8 h-8 rounded-full border border-gray-300 bg-white text-gray-500 text-sm font-medium cursor-pointer hover:bg-gray-50">
+        <button className="w-8 h-8 rounded-full border border-border bg-background text-muted-foreground text-sm font-medium cursor-pointer hover:bg-muted">
           ?
         </button>
       </footer>

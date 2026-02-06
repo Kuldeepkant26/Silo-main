@@ -164,7 +164,7 @@ export const teamRouter = createTRPCRouter({
             message: "Team not found or unauthorized.",
           });
         }
-
+           
         await tx
           .update(team)
           .set({

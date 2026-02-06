@@ -608,7 +608,6 @@ export default function Home() {
 
       <style jsx>{`
         @keyframes floatUp {
-          from {
             opacity: 0;
             transform: translateY(40px);
           }
@@ -652,3 +651,4 @@ export default function Home() {
     </div>
   );
 }
+    

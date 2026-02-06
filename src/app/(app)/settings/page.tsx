@@ -8,7 +8,7 @@ export default function SettingsPage() {
   return (
     <section className="flex flex-col p-10">
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("settings")}</h1>
+        <h1 className="text-4xl font-bold text-foreground">{t("settings")}</h1>
       </header>
 
       <div className="flex flex-col gap-6 max-w-[940px] w-full">

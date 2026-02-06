@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ROLES } from "~/config/people";
 import { inviteToOrganizationSchema } from "~/lib/validators/people";
 import { authClient } from "~/server/auth/client";
+import { api } from "~/trpc/react";
 
 import { Icons } from "./icons";
 import { Spinner } from "./spinner";
@@ -48,6 +49,14 @@ export function CreateMember() {
   const router = useRouter();
   const t = useTranslations();
   const queryClient = useQueryClient();
+  const { data: auth } = authClient.useSession();
+
+  // Check if current user has permission to invite
+  // Only run the query if user has an active organization
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    enabled: !!auth?.session?.activeOrganizationId,
+  });
+  const canInvite = userRole?.isAdmin || userRole?.isOwner;
 
   const [open, setOpen] = useState(false);
   const [isInviteLoading, setIsInviteLoading] = useState<boolean>(false);
@@ -89,6 +98,11 @@ export function CreateMember() {
 
     window.dispatchEvent(new CustomEvent("invitations-changed"));
   };
+
+  // Don't show invite button for regular members
+  if (!canInvite) {
+    return null;
+  }
 
   return (
     <Drawer direction="right" open={open} onOpenChange={setOpen}>

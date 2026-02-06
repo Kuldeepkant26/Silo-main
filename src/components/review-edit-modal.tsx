@@ -103,7 +103,7 @@ export function ReviewEditModal({
       }
     };
 
-    fetchLegalOwners();
+    fetchLegalOwners();                  
   }, [organizationId, open]);
 
   // Fetch current review details
@@ -111,9 +111,14 @@ export function ReviewEditModal({
     const fetchReviewDetails = async () => {
       if (!open || !reviewId) return;
       
+      // Reset state when modal opens
+      setLegalOwnerId("");
+      setPriority("");
+      setWorkflowStatus("");
+      
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/internal/review-details/${reviewId}`,
+          `${API_BASE_URL}/api/get-ticket-detail/${reviewId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -125,8 +130,19 @@ export function ReviewEditModal({
         if (response.ok) {
           const data = await response.json();
           console.log("Review details response:", data);
+          
+          // Handle different possible response structures
+          let ticket = null;
           if (data.tickets && data.tickets.length > 0) {
-            const ticket = data.tickets[0];
+            ticket = data.tickets[0];
+          } else if (data.ticket) {
+            ticket = data.ticket;
+          } else if (data.id) {
+            // The response itself might be the ticket
+            ticket = data;
+          }
+          
+          if (ticket) {
             const initialLegalOwnerId = ticket.legalOwnerId || "";
             const initialPriority = ticket.priority || "";
             const initialWorkflowStatus = ticket.workflowStatus || "";
@@ -212,7 +228,7 @@ export function ReviewEditModal({
         <div className="space-y-6 py-4">
           {/* Legal Owner */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               {t("legal_owner")}
             </label>
             <Select value={legalOwnerId} onValueChange={setLegalOwnerId} disabled={legalOwners.length === 0}>
@@ -245,7 +261,7 @@ export function ReviewEditModal({
 
           {/* Change Priority */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               Change priority
             </label>
             <Select value={priority} onValueChange={setPriority}>
@@ -262,7 +278,7 @@ export function ReviewEditModal({
 
           {/* Status */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               Status
             </label>
             <Select value={workflowStatus} onValueChange={setWorkflowStatus}>
@@ -282,7 +298,7 @@ export function ReviewEditModal({
           <Button
             onClick={handleSave}
             disabled={saving || loading}
-            className="w-full rounded-full bg-[#1a1a1a] text-white py-6 text-sm font-bold hover:bg-[#333]"
+            className="w-full rounded-full bg-primary text-primary-foreground py-6 text-sm font-bold hover:bg-primary/90"
           >
             {saving ? "Saving..." : "SAVE"}
           </Button>

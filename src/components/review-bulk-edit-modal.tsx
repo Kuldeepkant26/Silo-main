@@ -53,7 +53,7 @@ export function ReviewBulkEditModal({
         <div className="space-y-6 py-4">
           {/* Legal Owner */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               {t("legal_owner")}
             </label>
             <Select>
@@ -80,7 +80,7 @@ export function ReviewBulkEditModal({
 
           {/* Change Priority */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               {t("change_priority")}
             </label>
             <Select>
@@ -97,7 +97,7 @@ export function ReviewBulkEditModal({
 
           {/* Status */}
           <div>
-            <label className="text-lg font-bold text-[#1a1a1a] block mb-3">
+            <label className="text-lg font-bold text-foreground block mb-3">
               {t("status")}
             </label>
             <Select>

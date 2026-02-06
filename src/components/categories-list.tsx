@@ -190,18 +190,18 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-dashed border-[#d0d0d0] p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-[#1a1a1a] mb-1.5">Loading...</p>
-        <p className="text-[#666] text-sm">Fetching your categories</p>
+      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
+        <p className="text-xl font-bold text-foreground mb-1.5">Loading...</p>
+        <p className="text-muted-foreground text-sm">Fetching your categories</p>
       </div>
     );
   }
 
   if (categories.length === 0) {
     return (
-      <div className="bg-white border border-dashed border-[#d0d0d0] p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-[#1a1a1a] mb-1.5">No categories yet</p>
-        <p className="text-[#666] text-sm">Click "CREATE CATEGORY" to create your first category</p>
+      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
+        <p className="text-xl font-bold text-foreground mb-1.5">No categories yet</p>
+        <p className="text-muted-foreground text-sm">Click "CREATE CATEGORY" to create your first category</p>
       </div>
     );
   }
@@ -212,20 +212,20 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         {categories.map((category) => (
           <div
             key={category.id}
-            className="bg-white border border-[#e0e0e0] rounded-xl p-6 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] relative"
+            className="bg-card border border-border rounded-xl p-6 transition-shadow hover:shadow-md relative"
           >
             {/* Card Header */}
             <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <h3 className="text-xl font-semibold text-[#1a1a1a] m-0">{category.name}</h3>
+              <h3 className="text-xl font-semibold text-foreground m-0">{category.name}</h3>
               <div className="flex gap-2 flex-1 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e3f2fd] text-[#1565c0] text-sm font-medium rounded-md">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-md">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M2 2h4l1 1h5v8H2V2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   Category
                 </span>
                 {category.assignedTeam && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f3e5f5] text-[#7b1fa2] text-sm font-medium rounded-md">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-sm font-medium rounded-md">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <circle cx="7" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/>
                       <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -237,7 +237,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               {/* Three-dot Menu */}
               <div className="relative ml-auto" ref={openMenuId === category.id ? menuRef : null}>
                 <button
-                  className="p-2 bg-transparent border-none cursor-pointer text-[#666] rounded hover:bg-[#f5f5f5] transition-colors"
+                  className="p-2 bg-transparent border-none cursor-pointer text-muted-foreground rounded hover:bg-muted transition-colors"
                   onClick={() => setOpenMenuId(openMenuId === category.id ? null : category.id)}
                   aria-label="Open actions"
                 >
@@ -248,9 +248,9 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   </svg>
                 </button>
                 {openMenuId === category.id && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-[#e0e0e0] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[150px] z-10 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg min-w-[150px] z-10 overflow-hidden">
                     <button
-                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-[#d32f2f] cursor-pointer transition-colors hover:bg-[#ffebee]"
+                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
                       onClick={() => openDeleteModal(category.id, category.name)}
                     >
                       Delete
@@ -264,15 +264,15 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             <div className="mb-3">
               <div className="relative max-w-[280px]">
                 {updatingReviewerId === category.id && (
-                  <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center z-10">
-                    <svg className="animate-spin h-5 w-5 text-[#1a1a1a]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <div className="absolute inset-0 bg-background/80 rounded-lg flex items-center justify-center z-10">
+                    <svg className="animate-spin h-5 w-5 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </div>
                 )}
                 <select
-                  className="w-full py-3 px-4 bg-white border border-[#e0e0e0] rounded-lg text-sm text-[#666] cursor-pointer appearance-none pr-10 focus:outline-none focus:border-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-background border border-border rounded-lg text-sm text-muted-foreground cursor-pointer appearance-none pr-10 focus:outline-none focus:border-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   value={category.reviewerId || ""}
                   onChange={(e) => handleReviewerChange(category.id, e.target.value)}
                   disabled={updatingReviewerId === category.id}
@@ -295,7 +295,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             {/* Card Footer - Automatic replies */}
             {category.autoReplyEnabled && (
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 text-[#666] text-sm">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground text-sm">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
                     <circle cx="8" cy="8" r="3" fill="currentColor"/>
@@ -318,11 +318,11 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
           />
           
           {/* Modal */}
-          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-[420px] w-full mx-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-card rounded-2xl shadow-2xl p-8 max-w-[420px] w-full mx-4 animate-in fade-in zoom-in-95 duration-200">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-[#f5f5f5] flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="2">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
@@ -330,23 +330,23 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             
             {/* Content */}
             <div className="text-center mb-8">
-              <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">Delete Category</h3>
-              <p className="text-[#666] text-sm leading-relaxed">
-                Are you sure you want to delete <span className="font-semibold text-[#1a1a1a]">"{deleteModal.categoryName}"</span>? This action cannot be undone.
+              <h3 className="text-xl font-bold text-foreground mb-2">Delete Category</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Are you sure you want to delete <span className="font-semibold text-foreground">"{deleteModal.categoryName}"</span>? This action cannot be undone.
               </p>
             </div>
             
             {/* Actions */}
             <div className="flex gap-3">
               <button
-                className="flex-1 py-3 px-4 bg-transparent border-2 border-[#e0e0e0] rounded-xl text-sm font-semibold text-[#1a1a1a] cursor-pointer transition-all hover:bg-[#f5f5f5] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 bg-transparent border-2 border-border rounded-xl text-sm font-semibold text-foreground cursor-pointer transition-all hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
               >
                 Cancel
               </button>
               <button
-                className="flex-1 py-3 px-4 bg-[#1a1a1a] border-2 border-[#1a1a1a] rounded-xl text-sm font-semibold text-white cursor-pointer transition-all hover:bg-[#333] hover:border-[#333] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-primary border-2 border-primary rounded-xl text-sm font-semibold text-primary-foreground cursor-pointer transition-all hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -370,7 +370,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-[#1a1a1a] text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3">
+          <div className="bg-primary text-primary-foreground px-5 py-3 rounded-xl shadow-lg flex items-center gap-3">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

@@ -124,6 +124,9 @@ export function CreateRequest() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancedVersions, setEnhancedVersions] = useState<string[]>([]);
+  const [showEnhanced, setShowEnhanced] = useState(false);
 
   const form = useForm<z.infer<typeof internalRequestSchema>>({
     resolver: zodResolver(internalRequestSchema),
@@ -290,6 +293,34 @@ export function CreateRequest() {
     e.target.value = "";
   };
 
+  const handleEnhanceDescription = async () => {
+    const description = form.getValues("description");
+    if (!description || description.length < 10) {
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      const response = await fetch("/api/agent/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: description }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.enhancedVersions && data.enhancedVersions.length > 0) {
+          setEnhancedVersions(data.enhancedVersions);
+          setShowEnhanced(true);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to enhance description:", err);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   const handleRemoveFile = async (index: number) => {
     const fileToRemove = uploadedFiles[index];
 
@@ -405,7 +436,7 @@ export function CreateRequest() {
   return (
     <Drawer direction="right" open={showDialog} onOpenChange={handleDialogChange}>
       <DrawerTrigger asChild>
-        <Button className="flex items-center gap-x-2 bg-[#1a1a1a] text-white hover:bg-[#333] px-6 py-3 rounded-lg text-sm font-semibold tracking-wide transition-colors">
+        <Button className="flex items-center gap-x-2 bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-lg text-sm font-semibold tracking-wide transition-colors">
           <Icons.add className="h-4 w-4" />
           {t("new_request")}
         </Button>
@@ -538,7 +569,28 @@ export function CreateRequest() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("description")}*</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>{t("description")}*</FormLabel>
+                      <button
+                        type="button"
+                        onClick={handleEnhanceDescription}
+                        disabled={isEnhancing || (field.value?.length || 0) < 10}
+                        className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-foreground bg-muted rounded-full hover:bg-muted/80 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-muted"
+                        title={(field.value?.length || 0) < 10 ? "Type at least 10 characters to enhance" : "Enhance with AI"}
+                      >
+                        {isEnhancing ? (
+                          <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                        {isEnhancing ? "Enhancing..." : "Enhance"}
+                      </button>
+                    </div>
 
                     <FormControl>
                       <Textarea
@@ -547,6 +599,51 @@ export function CreateRequest() {
                         {...field}
                       />
                     </FormControl>
+
+                    {/* Enhanced Versions */}
+                    {showEnhanced && enhancedVersions.length > 0 && (
+                      <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span className="text-xs font-semibold text-foreground">Enhanced Versions</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEnhanced(false);
+                              setEnhancedVersions([]);
+                            }}
+                            className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {enhancedVersions.map((version, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                form.setValue("description", version);
+                                setShowEnhanced(false);
+                                setEnhancedVersions([]);
+                              }}
+                              className="w-full p-2.5 text-left text-xs rounded-md bg-background border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 group"
+                            >
+                              <p className="text-foreground/80 group-hover:text-foreground leading-relaxed line-clamp-3">
+                                {version}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-2 text-center">Click any version to use it</p>
+                      </div>
+                    )}
 
                     <FormDescription>
                       {t("create_request_description_form_description")}

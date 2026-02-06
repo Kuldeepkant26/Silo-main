@@ -25,37 +25,49 @@ export function SidebarNav() {
       <div className="w-full flex flex-col gap-2 flex-1">
         {SIDEBAR_NAV_ITEMS.map((item, index) => {
           const Icon = Icons[item.icon] ?? Icons.chevronRight;
+          const isDisabled = !auth?.session.activeOrganizationId || item.disabled;
 
           return (
             <Tooltip key={index}>
               <TooltipTrigger asChild>
                 <Button
                   className={cn(
-                    "relative h-auto w-full items-center justify-start rounded-md py-3 px-4 transition-colors text-[#333] hover:bg-black/[0.06] text-lg font-medium bg-transparent border-none",
+                    "relative h-auto w-full items-center justify-start rounded-md py-3 px-4 transition-colors text-foreground/80 hover:bg-foreground/[0.06] text-lg font-medium bg-transparent border-none",
                     {
-                      "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white": pathname.includes(item.href),
-                      "text-[#999] hover:text-[#999] cursor-not-allowed opacity-60":
-                        !auth?.session.activeOrganizationId || item.disabled,
+                      "bg-primary text-primary-foreground hover:!bg-primary hover:!text-primary-foreground": pathname.includes(item.href) && !isDisabled,
+                      "text-muted-foreground hover:text-muted-foreground hover:bg-transparent cursor-not-allowed opacity-60":
+                        isDisabled,
                     },
                   )}
-                  disabled={
-                    !auth?.session.activeOrganizationId || item.disabled
-                  }
+                  disabled={isDisabled}
                   variant="ghost"
-                  asChild={!(!auth?.session.activeOrganizationId || item.disabled)}
+                  asChild={!isDisabled}
                 >
-                  <Link className="text-lg font-medium" href={item.href}>
-                    <h4>{t(item.title)}</h4>
-
-                    {item.tag && (
-                      <Badge
-                        variant="outline"
-                        className="border-[#333] text-[#333] absolute top-2 right-2 text-xs"
-                      >
-                        {t(item.tag)}
-                      </Badge>
-                    )}
-                  </Link>
+                  {isDisabled ? (
+                    <span className="text-lg font-medium flex items-center">
+                      <h4>{t(item.title)}</h4>
+                      {item.tag && (
+                        <Badge
+                          variant="outline"
+                          className="border-foreground/50 text-foreground/80 absolute top-2 right-2 text-xs"
+                        >
+                          {t(item.tag)}
+                        </Badge>
+                      )}
+                    </span>
+                  ) : (
+                    <Link className="text-lg font-medium" href={item.href}>
+                      <h4>{t(item.title)}</h4>
+                      {item.tag && (
+                        <Badge
+                          variant="outline"
+                          className="border-foreground/50 text-foreground/80 absolute top-2 right-2 text-xs"
+                        >
+                          {t(item.tag)}
+                        </Badge>
+                      )}
+                    </Link>
+                  )}
                 </Button>
               </TooltipTrigger>
               {item.tooltip && (
@@ -68,7 +80,7 @@ export function SidebarNav() {
         })}
       </div>
       <div className="mt-auto">
-        <div className="flex items-center gap-3 p-3 px-4 bg-[#b8b8b8] rounded-xl">
+        <div className="flex items-center gap-3 p-3 px-4 bg-muted dark:bg-accent rounded-xl">
           <UserAccountNav user={auth?.user} />
         </div>
       </div>

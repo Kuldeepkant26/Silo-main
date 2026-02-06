@@ -15,6 +15,7 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(1).optional(),
     EMAIL_SENDER_NAME: z.string().min(1).default("Silo Support"),
     EMAIL_SENDER_ADDRESS: z.string().email().default("support@bysilo.com"),
+    GEMINI_API_KEY: z.string().min(1).optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -42,6 +43,7 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_SENDER_NAME: process.env.EMAIL_SENDER_NAME,
     EMAIL_SENDER_ADDRESS: process.env.EMAIL_SENDER_ADDRESS,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_API_AUTH_TOKEN: process.env.NEXT_PUBLIC_API_AUTH_TOKEN,

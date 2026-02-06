@@ -115,7 +115,7 @@ export function FileDropzone({
     },
     [currentFiles, onChange, handleFileValidation, maxFiles],
   );
-
+    
   const handleFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const selectedFiles = Array.from(event.target.files ?? []);
@@ -157,7 +157,7 @@ export function FileDropzone({
     },
     [currentFiles, onChange],
   );
-
+                    
   return (
     <div
       className={cn(

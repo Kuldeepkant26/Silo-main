@@ -37,12 +37,12 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
       <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-x-3">
         <UserAvatar
           user={{ name: user?.name ?? "", image: user?.image ?? "" }}
-          className="h-9 w-9 bg-white text-[#333] flex-shrink-0"
+          className="h-9 w-9 bg-background text-foreground flex-shrink-0"
         />
         <div className="flex flex-col items-start gap-y-0 min-w-0 flex-1">
-          {user?.name && <p className="text-base font-medium text-[#333] truncate w-full">{user.name}</p>}
+          {user?.name && <p className="text-base font-medium text-foreground truncate w-full">{user.name}</p>}
           {user?.email && (
-            <p className="truncate text-xs text-[#666] w-full">
+            <p className="truncate text-xs text-muted-foreground w-full">
               {user.email}
             </p>
           )}

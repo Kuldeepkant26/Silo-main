@@ -27,11 +27,9 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     icon: "settings",
   },
   {
-    title: "silo_ai",
-    href: "#",
+    title: "silo_agent",
+    href: "/agent",
     icon: "ai",
     disabled: true,
-    tooltip: "coming_soon",
-    tag: "soon",
   },
 ];

@@ -40,60 +40,60 @@ export default function SettingsRequestsAndReviewsPage() {
       <header className="flex items-end justify-between mb-8">
         <div className="flex flex-col items-start gap-y-4">
           <BackButton
-            className="!px-0 text-[#1a1a1a] hover:text-[#333]"
+            className="!px-0 text-foreground hover:text-foreground/80"
             route={ROUTES.SETTINGS}
             label="back_to_settings"
           />
 
-          <h1 className="text-4xl font-bold text-[#1a1a1a]">{t("requests_and_reviews")}</h1>
+          <h1 className="text-4xl font-bold text-foreground">{t("requests_and_reviews")}</h1>
         </div>
       </header>
 
       <div className="flex flex-col gap-6 max-w-[1200px] w-full">
         <div className="flex justify-between items-center flex-wrap gap-5 mb-[30px]">
           {/* Tabs with underline style */}
-          <div className="flex gap-[30px] border-b-2 border-[#e0e0e0] pb-[2px]">
+          <div className="flex gap-[30px] border-b-2 border-border pb-[2px]">
             <button
-              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "categories" ? "text-[#1a1a1a]" : "text-[#666] hover:text-[#333]"}`}
+              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "categories" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
               onClick={() => setActiveTab("categories")}
             >
               Categories
               {activeTab === "categories" && (
-                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-[#1a1a1a]" />
+                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
               )}
             </button>
             <button
-              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "tags" ? "text-[#1a1a1a]" : "text-[#666] hover:text-[#333]"}`}
+              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "tags" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
               onClick={() => setActiveTab("tags")}
             >
               Tags
               {activeTab === "tags" && (
-                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-[#1a1a1a]" />
+                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
               )}
             </button>
             <button
-              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "teams" ? "text-[#1a1a1a]" : "text-[#666] hover:text-[#333]"}`}
+              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "teams" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
               onClick={() => setActiveTab("teams")}
             >
               Teams
               {activeTab === "teams" && (
-                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-[#1a1a1a]" />
+                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
               )}
             </button>
             <button
-              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "external" ? "text-[#1a1a1a]" : "text-[#666] hover:text-[#333]"}`}
+              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "external" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
               onClick={() => setActiveTab("external")}
             >
               External
               {activeTab === "external" && (
-                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-[#1a1a1a]" />
+                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
               )}
             </button>
           </div>
 
           {/* CTA Button */}
           <button 
-            className="py-3 px-6 bg-[#1a1a1a] text-white border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-[#333] whitespace-nowrap"
+            className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
             onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
           >
             {activeTab === "tags" ? "CREATE TAG" : activeTab === "teams" ? "CREATE TEAM" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
@@ -110,7 +110,7 @@ export default function SettingsRequestsAndReviewsPage() {
         )}
 
         {activeTab === "teams" && (
-          <div className="text-[#666]">Teams content</div>
+          <div className="text-muted-foreground">Teams content</div>
         )}
 
         {activeTab === "external" && (

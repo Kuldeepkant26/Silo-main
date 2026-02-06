@@ -45,6 +45,7 @@ export function UserAccountProfile() {
     session?.user?.image ?? undefined,
   );
   const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
   const uploadImageMutation = api.storage.uploadProfileImage.useMutation();
 
@@ -215,7 +216,26 @@ export function UserAccountProfile() {
                   <FormItem>
                     <FormLabel>{t("name")}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <div className="relative">
+                        <Input 
+                          {...field} 
+                          readOnly={!isEditingName}
+                          className={!isEditingName ? "pr-10 cursor-default bg-muted/30" : "pr-10"}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => setIsEditingName(!isEditingName)}
+                        >
+                          {isEditingName ? (
+                            <Icons.circleCheck className="h-4 w-4" />
+                          ) : (
+                            <Icons.edit className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage className="-mt-2" />
                   </FormItem>

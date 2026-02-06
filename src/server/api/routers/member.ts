@@ -9,6 +9,26 @@ import { team, teamMembers } from "~/server/db/schema";
 import { createTRPCRouter, organizationProtectedProcedure } from "../trpc";
 
 export const memberRouter = createTRPCRouter({
+  getCurrentUserRole: organizationProtectedProcedure.query(async ({ ctx }) => {
+    const activeOrganizationId = ctx.session.session.activeOrganizationId;
+    const userId = ctx.session.user.id;
+
+    const currentMember = await ctx.db.query.member.findFirst({
+      where: and(
+        eq(member.userId, userId),
+        eq(member.organizationId, activeOrganizationId!),
+      ),
+      columns: { role: true },
+    });
+
+    return {
+      role: currentMember?.role ?? "member",
+      isAdmin: currentMember?.role === "admin" || currentMember?.role === "owner",
+      isOwner: currentMember?.role === "owner",
+      isMember: currentMember?.role === "member",
+    };
+  }),
+
   edit: organizationProtectedProcedure
     .input(
       z.object({

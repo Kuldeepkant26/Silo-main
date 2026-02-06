@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 "use client";
-
+    
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Fragment, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -14,12 +14,12 @@ import {
 } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-
+   
 import type { MemberWithTeams } from "~/server/db/schema";
 import { PEOPLE_LIST_PAGE_SIZE, SEARCH_PARAM_MEMBER_ID } from "~/config/people";
 import { authClient } from "~/server/auth/client";
 import { api } from "~/trpc/react";
-
+     
 import { EditMember } from "./edit-member";
 import { Icons } from "./icons";
 import { Spinner } from "./spinner";
@@ -64,7 +64,7 @@ export function PeopleList() {
     pageIndex: 0,
     pageSize: PEOPLE_LIST_PAGE_SIZE,
   });
-
+       
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [deleteMember, setDeleteMember] = useState<MemberWithTeams | null>(

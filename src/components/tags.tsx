@@ -11,7 +11,7 @@ export function Tags() {
   return (
     <section className="flex flex-col">
       <header className="flex justify-between items-center mb-6 px-8 md:-mx-8">
-        <h2 className="text-2xl font-bold text-[#171717]">{t("categories")}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t("categories")}</h2>
 
         <CreateTag />
       </header>

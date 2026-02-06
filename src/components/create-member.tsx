@@ -199,7 +199,7 @@ export function CreateMember() {
                 disabled={!invitePeopleForm.formState.isValid}
                 type="submit"
               >
-                {isInviteLoading ? <Spinner /> : t("create")}
+                {isInviteLoading ? <Spinner /> : t("invite")}
               </Button>
             </DrawerFooter>
           </form>

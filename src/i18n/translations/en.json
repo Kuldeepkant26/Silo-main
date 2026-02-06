@@ -92,6 +92,7 @@
   "general_settings_description": "Manage billing and company information",
   "generic_error": "Something went wrong. Please try again",
   "inactive": "Inactive",
+  "invite": "Invite",
   "invitations_list_caption": "A list of all non-accepted invitations.",
   "invitations_list_not_found": "No invitations found yet.",
   "invite_user": "Invite user",

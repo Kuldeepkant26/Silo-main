@@ -662,9 +662,9 @@ export function ReviewDetailPanel({
                             }
                           }, 0);
                         }}
-                        className="flex-1 min-w-[140px] max-w-[200px] p-2.5 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
+                        className="flex-1 min-w-[180px] max-w-[280px] p-3 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
                       >
-                        <p className="line-clamp-3 text-foreground/80 group-hover:text-foreground leading-relaxed">
+                        <p className="line-clamp-5 text-foreground/80 group-hover:text-foreground leading-relaxed whitespace-pre-wrap break-words">
                           {suggestion}
                         </p>
                       </button>
@@ -712,9 +712,9 @@ export function ReviewDetailPanel({
                           }
                         }, 0);
                       }}
-                      className="flex-1 min-w-[140px] max-w-[200px] p-2.5 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
+                      className="flex-1 min-w-[180px] max-w-[280px] p-3 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
                     >
-                      <p className="line-clamp-3 text-foreground/80 group-hover:text-foreground leading-relaxed">
+                      <p className="line-clamp-5 text-foreground/80 group-hover:text-foreground leading-relaxed whitespace-pre-wrap break-words">
                         {version}
                       </p>
                     </button>

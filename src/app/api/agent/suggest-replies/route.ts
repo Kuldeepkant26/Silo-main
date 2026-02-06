@@ -8,13 +8,13 @@ const suggestRepliesSchema = z.object({
   messages: z.array(
     z.object({
       senderType: z.string(),
-      senderEmail: z.string().optional(),
+      senderEmail: z.string().nullable().optional(),
       message: z.string(),
     })
   ),
   context: z.object({
-    ticketTitle: z.string().optional(),
-    ticketEmail: z.string().optional(),
+    ticketTitle: z.string().nullable().optional(),
+    ticketEmail: z.string().nullable().optional(),
   }).optional(),
 });
 

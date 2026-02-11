@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { SIDEBAR_NAV_ITEMS } from "~/config/dashboard";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
+import { api } from "~/trpc/react";
 
 import { Icons } from "./icons";
 import { Badge } from "./ui/badge";
@@ -19,13 +20,35 @@ export function SidebarNav() {
   const t = useTranslations();
 
   const { data: auth } = authClient.useSession();
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    enabled: !!auth?.session.activeOrganizationId,
+  });
+
+  // Filter sidebar items based on user role
+  const filteredSidebarItems = SIDEBAR_NAV_ITEMS.filter((item) => {
+    // Hide Review tab for members
+    if (item.href === "/review" && userRole?.isMember) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex h-full w-full flex-col justify-between gap-y-2">
       <div className="w-full flex flex-col gap-2 flex-1">
-        {SIDEBAR_NAV_ITEMS.map((item, index) => {
+        {filteredSidebarItems.map((item, index) => {
           const Icon = Icons[item.icon] ?? Icons.chevronRight;
           const isDisabled = !auth?.session.activeOrganizationId || item.disabled;
+          
+          // Use "my_requests" for members, "requests" for others
+          const titleKey = item.href === "/requests" && userRole?.isMember 
+            ? "my_requests" 
+            : item.title;
+          
+          // Redirect members to /my-requests instead of /requests
+          const itemHref = item.href === "/requests" && userRole?.isMember
+            ? "/my-requests"
+            : item.href;
 
           return (
             <Tooltip key={index}>
@@ -34,7 +57,7 @@ export function SidebarNav() {
                   className={cn(
                     "relative h-auto w-full items-center justify-start rounded-md py-3 px-4 transition-colors text-foreground/80 hover:bg-foreground/[0.06] text-lg font-medium bg-transparent border-none",
                     {
-                      "bg-primary text-primary-foreground hover:!bg-primary hover:!text-primary-foreground": pathname.includes(item.href) && !isDisabled,
+                      "bg-primary text-primary-foreground hover:!bg-primary hover:!text-primary-foreground": pathname.includes(itemHref) && !isDisabled,
                       "text-muted-foreground hover:text-muted-foreground hover:bg-transparent cursor-not-allowed opacity-60":
                         isDisabled,
                     },
@@ -45,7 +68,7 @@ export function SidebarNav() {
                 >
                   {isDisabled ? (
                     <span className="text-lg font-medium flex items-center">
-                      <h4>{t(item.title)}</h4>
+                      <h4>{t(titleKey)}</h4>
                       {item.tag && (
                         <Badge
                           variant="outline"
@@ -56,8 +79,8 @@ export function SidebarNav() {
                       )}
                     </span>
                   ) : (
-                    <Link className="text-lg font-medium" href={item.href}>
-                      <h4>{t(item.title)}</h4>
+                    <Link className="text-lg font-medium" href={itemHref}>
+                      <h4>{t(titleKey)}</h4>
                       {item.tag && (
                         <Badge
                           variant="outline"

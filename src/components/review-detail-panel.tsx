@@ -210,16 +210,32 @@ export function ReviewDetailPanel({
     fetchMessages();
   }, [review.id, userId, userEmail, activeTab]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change - use auto for instant scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [messages]);
 
   // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !userId || !userEmail) return;
     
+    const messageText = newMessage.trim();
+    const tempId = Date.now();
+    
+    // Optimistic update - add message immediately to UI
+    const tempMessage: ChatMessage = {
+      id: tempId,
+      message: messageText,
+      attachments: [],
+      senderType: "ADMIN",
+      senderEmail: userEmail,
+      createdAt: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage("");
     setSendingMessage(true);
+    
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/ticket-message/${review.id}`,
@@ -232,52 +248,35 @@ export function ReviewDetailPanel({
           body: JSON.stringify({
             user_id: userId,
             email: userEmail,
-            message: newMessage,
+            message: messageText,
             attachments: [],
           }),
         }
       );
       
       if (response.ok) {
-        // Add message to local state immediately with correct senderEmail
-        const tempMessage: ChatMessage = {
-          id: Date.now(),
-          message: newMessage,
-          attachments: [],
-          senderType: "ADMIN",
-          senderEmail: userEmail,
-          createdAt: new Date().toISOString(),
-        };
-        setMessages([...messages, tempMessage]);
-        setNewMessage("");
-        
-        // Refetch messages to sync with server
-        setTimeout(async () => {
-          try {
-            const queryParam = userId 
-              ? `user_id=${userId}` 
-              : `email=${userEmail}`;
-            const refreshResponse = await fetch(
-              `${API_BASE_URL}/api/ticket-message/${review.id}?${queryParam}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": AUTH_TOKEN,
-                },
-              }
-            );
-            if (refreshResponse.ok) {
-              const data = await refreshResponse.json();
-              setMessages(data.messages || data || []);
-            }
-          } catch (err) {
-            console.error("Error refreshing messages:", err);
-          }
-        }, 500);
+        const data = await response.json();
+        // Update the optimistic message with the actual server response if available
+        if (data.message || data.id) {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === tempId 
+                ? { ...msg, id: data.id || data.message?.id || tempId }
+                : msg
+            )
+          );
+        }
+      } else {
+        // Remove the optimistic message on error
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        setNewMessage(messageText); // Restore the message text
+        console.error("Failed to send message");
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      // Remove the optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      setNewMessage(messageText); // Restore the message text
     } finally {
       setSendingMessage(false);
     }

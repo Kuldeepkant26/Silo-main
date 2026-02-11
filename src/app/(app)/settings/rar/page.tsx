@@ -72,15 +72,6 @@ export default function SettingsRequestsAndReviewsPage() {
               )}
             </button>
             <button
-              className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "teams" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
-              onClick={() => setActiveTab("teams")}
-            >
-              Teams
-              {activeTab === "teams" && (
-                <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
-              )}
-            </button>
-            <button
               className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "external" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
               onClick={() => setActiveTab("external")}
             >
@@ -96,7 +87,7 @@ export default function SettingsRequestsAndReviewsPage() {
             className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
             onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
           >
-            {activeTab === "tags" ? "CREATE TAG" : activeTab === "teams" ? "CREATE TEAM" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
+            {activeTab === "tags" ? "CREATE TAG" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
           </button>
         </div>
 
@@ -107,10 +98,6 @@ export default function SettingsRequestsAndReviewsPage() {
 
         {activeTab === "tags" && (
           <Tags />
-        )}
-
-        {activeTab === "teams" && (
-          <div className="text-muted-foreground">Teams content</div>
         )}
 
         {activeTab === "external" && (

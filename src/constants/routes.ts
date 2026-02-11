@@ -5,6 +5,7 @@ export const ROUTES = {
   ORGANIZATION: "/organization",
   REGISTER: "/register",
   REQUESTS: "/requests",
+  MY_REQUESTS: "/my-requests",
   RESET_PASSWORD: "/reset-password",
   SETTINGS: "/settings",
   SETTINGS_GENERAL: "/settings/general",

@@ -26,6 +26,7 @@ export const memberRouter = createTRPCRouter({
       isAdmin: currentMember?.role === "admin" || currentMember?.role === "owner",
       isOwner: currentMember?.role === "owner",
       isMember: currentMember?.role === "member",
+      isLegal: currentMember?.role === "legal",
     };
   }),
 
@@ -33,7 +34,7 @@ export const memberRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        role: z.enum(["admin", "member", "owner"]),
+        role: z.enum(["admin", "member", "owner", "legal"]),
         teams: z.array(z.string().uuid()).optional(),
       }),
     )

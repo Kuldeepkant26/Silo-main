@@ -27,7 +27,7 @@ import { Input } from "./ui/input";
 export function OrganizationDetails() {
   const t = useTranslations();
 
-  const { data: organization, isPending } = authClient.useActiveOrganization();
+  const { data: organization, isPending, refetch } = authClient.useActiveOrganization();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -54,8 +54,11 @@ export function OrganizationDetails() {
     });
 
     if (error) {
-      toast.error(t(""));
+      toast.error(t("update_organization_error"));
     } else {
+      // Refetch organization data to update UI
+      await refetch();
+      toast.success(t("update_organization_success"));
       setIsEditing(false);
     }
 

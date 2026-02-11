@@ -7,12 +7,10 @@ import { Info } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
-import { api } from "~/trpc/react";
 
 import { Icons } from "./icons";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
 import {
   Table,
@@ -31,8 +29,7 @@ import {
 } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { ReviewDetailPanel } from "./review-detail-panel";
-import { ReviewBulkEditModal } from "./review-bulk-edit-modal";
-import { ReviewEditModal } from "./review-edit-modal";
+import { CreateRequest } from "./create-request";
 
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
@@ -67,11 +64,11 @@ interface Ticket {
   requestForm: RequestForm | null;
 }
 
-// Review item for display
-interface ReviewItem {
+// Request item for display
+interface RequestItem {
   id: string;
-  type: string; // sourceType (EXTERNAL/INTERNAL)
-  title: string; // requestForm.name
+  type: string;
+  title: string;
   email: string;
   createdAt: string;
   startDate: string | null;
@@ -84,49 +81,39 @@ interface ReviewItem {
 
 type SortOrder = "newest" | "oldest";
 
-export function ReviewList() {
+interface Filters {
+  priority: string;
+  status: string;
+  category: string;
+  sourceType: string;
+}
+
+export function MyRequestsList() {
   const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
   const userEmail = auth?.user?.email;
   const userId = auth?.user?.id;
 
-  // Check if current user is admin/owner
-  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
-    enabled: !!organizationId,
-  });
-
-  // State for API data
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // UI State
+  
+  // UI state
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
-  const [selectedFilters, setSelectedFilters] = useState<{
-    priority: string;
-    status: string;
-    category: string;
-    sourceType: string;
-    reviewed: string;
-  }>({
+  const [selectedFilters, setSelectedFilters] = useState<Filters>({
     priority: "",
     status: "",
     category: "",
     sourceType: "",
-    reviewed: "",
   });
-  const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
-  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editReviewId, setEditReviewId] = useState<string | null>(null);
 
-  // Fetch all tickets for review using current user's ID
+  // Fetch tickets for the current user
   const fetchTickets = useCallback(async () => {
-    if (!userId) {
+    if (!userId || !organizationId) {
       setLoading(false);
       return;
     }
@@ -136,7 +123,7 @@ export function ReviewList() {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/internal/get-all-requests/${userId}/false`,
+        `${API_BASE_URL}/api/get-all-tickets?user_id=${userId}&organization_id=${organizationId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -147,33 +134,48 @@ export function ReviewList() {
       
       if (response.ok) {
         const data = await response.json();
-        setTickets(data.tickets || []);
+        // Filter tickets to show only the ones created by the current user
+        const userTickets = (data.tickets || []).filter(
+          (ticket: Ticket) => ticket.email === userEmail
+        );
+        setTickets(userTickets);
       } else {
-        const errorText = await response.text();
-        console.error("Failed to fetch tickets:", errorText);
-        setError("Failed to load tickets");
+        console.error("Failed to fetch tickets");
+        setTickets([]);
       }
     } catch (error) {
       console.error("Error fetching tickets:", error);
       setError("Error connecting to server");
+      setTickets([]);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, organizationId, userEmail]);
 
-  // Fetch tickets on mount
+  // Initial data fetch
   useEffect(() => {
-    if (userId) {
+    if (organizationId && userEmail) {
       fetchTickets();
     }
-  }, [userId, fetchTickets]);
+  }, [organizationId, userEmail, fetchTickets]);
 
-  // Transform tickets to ReviewItem format for table display
-  const reviewItems: ReviewItem[] = useMemo(() => {
+  // Listen for new request created event to refresh the list
+  useEffect(() => {
+    const handleRequestCreated = () => {
+      fetchTickets();
+    };
+
+    window.addEventListener("internal-request-created", handleRequestCreated);
+    return () => {
+      window.removeEventListener("internal-request-created", handleRequestCreated);
+    };
+  }, [fetchTickets]);
+
+  // Transform tickets to RequestItem format for table display
+  const requestItems: RequestItem[] = useMemo(() => {
     return tickets.map((ticket) => ({
       id: String(ticket.id),
       type: ticket.sourceType || "INTERNAL",
-      // For INTERNAL tickets, use summary; for EXTERNAL, use requestForm.name
       title: ticket.sourceType === "INTERNAL" 
         ? (ticket.summary || "") 
         : (ticket.requestForm?.name || ""),
@@ -196,11 +198,9 @@ export function ReviewList() {
     return [...new Set(categories)];
   }, [tickets]);
 
-  const pendingCount = tickets.length;
-
   // Filter and sort items
   const filteredItems = useMemo(() => {
-    let items = [...reviewItems];
+    let items = [...requestItems];
 
     // Apply search filter
     if (searchQuery) {
@@ -234,12 +234,6 @@ export function ReviewList() {
       items = items.filter((item) => item.type === selectedFilters.sourceType);
     }
 
-    // Apply reviewed filter
-    if (selectedFilters.reviewed) {
-      const isReviewed = selectedFilters.reviewed === "true";
-      items = items.filter((item) => item.reviewed === isReviewed);
-    }
-
     // Apply sort
     items.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
@@ -248,51 +242,26 @@ export function ReviewList() {
     });
 
     return items;
-  }, [reviewItems, searchQuery, selectedFilters, sortOrder]);
+  }, [requestItems, searchQuery, selectedFilters, sortOrder]);
 
-  const handleSelectAll = () => {
-    if (selectedItems.length === filteredItems.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredItems.map((item) => item.id));
-    }
-  };
-
-  const handleSelectItem = (id: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleRowClick = (item: ReviewItem) => {
-    setSelectedReview(item);
+  const handleRowClick = (item: RequestItem) => {
+    setSelectedRequest(item);
     setIsDetailPanelOpen(true);
-  };
-
-  const handleEditClick = (item: ReviewItem, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditReviewId(item.id);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditSuccess = () => {
-    // Refresh the tickets list after successful edit
-    fetchTickets();
   };
 
   const handleCloseDetailPanel = () => {
     setIsDetailPanelOpen(false);
-    setSelectedReview(null);
+    setSelectedRequest(null);
   };
 
-  const handleNavigateReview = (direction: "prev" | "next") => {
-    if (!selectedReview) return;
+  const handleNavigateRequest = (direction: "prev" | "next") => {
+    if (!selectedRequest) return;
     const currentIndex = filteredItems.findIndex(
-      (item) => item.id === selectedReview.id
+      (item) => item.id === selectedRequest.id
     );
     const newIndex = direction === "prev" ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < filteredItems.length) {
-      setSelectedReview(filteredItems[newIndex]!);
+      setSelectedRequest(filteredItems[newIndex]!);
     }
   };
 
@@ -346,7 +315,6 @@ export function ReviewList() {
         <div className="border rounded-lg overflow-hidden">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-4 border-b">
-              <Skeleton className="h-4 w-4" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-24" />
@@ -372,7 +340,7 @@ export function ReviewList() {
           onClick={() => {
             setError(null);
             setLoading(true);
-            fetchReviewers();
+            fetchTickets();
           }}
         >
           Retry
@@ -464,27 +432,12 @@ export function ReviewList() {
             </Select>
           )}
 
-          {/* Reviewed Filter */}
-          <Select 
-            value={selectedFilters.reviewed} 
-            onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewed: value === "all" ? "" : value }))}
-          >
-            <SelectTrigger className="w-[130px] rounded-full border-[#ccc]">
-              <SelectValue placeholder="Reviewed" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="true">Reviewed</SelectItem>
-              <SelectItem value="false">Not Reviewed</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Clear Filters Button */}
-          {(selectedFilters.priority || selectedFilters.status || selectedFilters.category || selectedFilters.sourceType || selectedFilters.reviewed) && (
+          {(selectedFilters.priority || selectedFilters.status || selectedFilters.category || selectedFilters.sourceType) && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedFilters({ priority: "", status: "", category: "", sourceType: "", reviewed: "" })}
+              onClick={() => setSelectedFilters({ priority: "", status: "", category: "", sourceType: "" })}
               className="text-muted-foreground hover:text-foreground"
             >
               <Icons.close className="h-4 w-4 mr-1" />
@@ -506,14 +459,15 @@ export function ReviewList() {
           </div>
         </div>
 
-        {/* Pending Requests Banner */}
-        <div className="flex items-center gap-3 bg-muted dark:bg-muted/50 rounded-lg px-4 py-3">
+        {/* Total Requests Info */}
+        <div className="flex items-center justify-between gap-3 bg-muted dark:bg-muted/50 rounded-lg px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-foreground">
             <Info className="h-4 w-4" />
             <span>
-              {pendingCount} {t("requests_pending_to_be_reviewed")}
+              {filteredItems.length} {filteredItems.length === 1 ? "request" : "requests"} found
             </span>
           </div>
+          <CreateRequest />
         </div>
       </div>
 
@@ -522,10 +476,8 @@ export function ReviewList() {
         <Table>
           <TableHeader>
             <TableRow className="bg-card hover:bg-card border-b">
-              <TableHead className="w-12"></TableHead>
               <TableHead className="font-bold text-foreground">Source</TableHead>
               <TableHead className="font-bold text-foreground">Title</TableHead>
-              <TableHead className="font-bold text-foreground">Email</TableHead>
               <TableHead className="font-bold text-foreground">Category</TableHead>
               <TableHead className="font-bold text-foreground">Created At</TableHead>
               <TableHead className="font-bold text-foreground">Priority</TableHead>
@@ -536,8 +488,8 @@ export function ReviewList() {
           <TableBody>
             {filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  {t("review_list_not_found")}
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  {t("request_list_not_found")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -547,16 +499,6 @@ export function ReviewList() {
                   className="cursor-pointer transition-colors hover:bg-muted/50"
                   onClick={() => handleRowClick(item)}
                 >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => handleEditClick(item, e)}
-                    >
-                      <Icons.edit className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
                   <TableCell className="font-medium">
                     <Badge variant="outline" className={cn(
                       "font-medium",
@@ -567,8 +509,7 @@ export function ReviewList() {
                       {item.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{item.title || "-"}</TableCell>
-                  <TableCell className="max-w-[180px] truncate">{item.email}</TableCell>
+                  <TableCell className="max-w-[250px] truncate">{item.title || "-"}</TableCell>
                   <TableCell>{item.category || "-"}</TableCell>
                   <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>{getUrgencyBadge(item.urgency)}</TableCell>
@@ -593,30 +534,13 @@ export function ReviewList() {
       </div>
 
       {/* Detail Panel */}
-      {isDetailPanelOpen && selectedReview && (
+      {isDetailPanelOpen && selectedRequest && (
         <ReviewDetailPanel
-          review={selectedReview}
+          review={selectedRequest}
           onClose={handleCloseDetailPanel}
-          onNavigate={handleNavigateReview}
+          onNavigate={handleNavigateRequest}
         />
       )}
-
-      {/* Edit Modal */}
-      {editReviewId && (
-        <ReviewEditModal
-          open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
-          reviewId={editReviewId}
-          onSuccess={handleEditSuccess}
-        />
-      )}
-
-      {/* Bulk Edit Modal */}
-      <ReviewBulkEditModal
-        open={isBulkEditOpen}
-        onOpenChange={setIsBulkEditOpen}
-        selectedCount={selectedItems.length}
-      />
     </div>
   );
 }

@@ -391,8 +391,8 @@ export function CreateRequest() {
       setUploadedFiles([]);
       setUploadError("");
 
-      toast.success(t("create_request_sucess_title"), {
-        description: t("create_request_sucess_description", { id: result.id || "new" }),
+      toast.success(t("create_request_success_title"), {
+        description: t("create_request_success_description", { id: result.id || "new" }),
         position: "bottom-right",
         dismissible: true,
       });

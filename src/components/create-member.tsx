@@ -78,7 +78,7 @@ export function CreateMember() {
 
     const { error } = await authClient.organization.inviteMember({
       email,
-      role: [(role ?? "member") as "owner" | "admin" | "member" | "legal"],
+      role: [(role ?? "member") as string] as ("owner" | "admin" | "member")[],
       resend: false,
     });
 

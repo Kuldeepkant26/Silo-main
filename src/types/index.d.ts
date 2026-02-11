@@ -9,6 +9,7 @@ export type SidebarNavItem = {
   icon: keyof typeof Icons;
   tooltip?: string;
   tag?: string;
+  visibleTo?: ("admin" | "owner" | "member" | "legal")[];
 };
 
 export type Item = {

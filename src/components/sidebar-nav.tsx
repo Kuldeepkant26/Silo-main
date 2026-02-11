@@ -26,11 +26,9 @@ export function SidebarNav() {
 
   // Filter sidebar items based on user role
   const filteredSidebarItems = SIDEBAR_NAV_ITEMS.filter((item) => {
-    // Hide Review tab for members
-    if (item.href === "/review" && userRole?.isMember) {
-      return false;
-    }
-    return true;
+    if (!item.visibleTo) return true;
+    if (!userRole?.role) return false;
+    return item.visibleTo.includes(userRole.role as "admin" | "owner" | "member" | "legal");
   });
 
   return (
@@ -40,15 +38,8 @@ export function SidebarNav() {
           const Icon = Icons[item.icon] ?? Icons.chevronRight;
           const isDisabled = !auth?.session.activeOrganizationId || item.disabled;
           
-          // Use "my_requests" for members, "requests" for others
-          const titleKey = item.href === "/requests" && userRole?.isMember 
-            ? "my_requests" 
-            : item.title;
-          
-          // Redirect members to /my-requests instead of /requests
-          const itemHref = item.href === "/requests" && userRole?.isMember
-            ? "/my-requests"
-            : item.href;
+          const titleKey = item.title;
+          const itemHref = item.href;
 
           return (
             <Tooltip key={index}>

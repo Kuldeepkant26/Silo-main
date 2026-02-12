@@ -57,5 +57,7 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     title: "silo_ai",
     href: "/agent",
     icon: "ai",
+    disabled: true,
+    tag: "soon",
   },
 ];

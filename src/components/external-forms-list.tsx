@@ -193,35 +193,77 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
 
   if (loading) {
     return (
-      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-foreground mb-1.5">Loading...</p>
-        <p className="text-muted-foreground text-sm">Fetching your external request forms</p>
+      <div className="max-w-[1200px] space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 overflow-hidden"
+          >
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-black/[0.04] dark:via-white/[0.04] to-transparent" />
+
+            <div className="flex items-center gap-4 mb-5">
+              <div className="h-6 w-40 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-7 w-28 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+            </div>
+            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-5" />
+            <div className="h-11 w-64 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+        ))}
+
+        <div className="flex justify-center pt-6">
+          <div className="flex items-center gap-3">
+            <div className="relative h-5 w-5">
+              <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-700" />
+              <div className="absolute inset-0 rounded-full border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent animate-spin" />
+            </div>
+            <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">Loading forms...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (forms.length === 0) {
     return (
-      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-foreground mb-1.5">No external request forms yet</p>
-        <p className="text-muted-foreground text-sm">Click "NEW EXTERNAL REQUEST" to create your first form</p>
+      <div className="bg-white dark:bg-neutral-900 border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-8 rounded-2xl max-w-[720px] text-center">
+        <div className="flex justify-center mb-4">
+          <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <svg className="h-6 w-6 text-neutral-400 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+        </div>
+        <p className="text-lg font-bold text-black dark:text-white mb-1">No external request forms yet</p>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm">Click &quot;NEW EXTERNAL REQUEST&quot; to create your first form</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col gap-5 max-w-[1200px]">
-        {forms.map((form) => (
+      <div className="max-w-[1200px]" style={{ perspective: "1200px" }}>
+        <div className="relative pt-2 pb-[120px]">
+        {forms.map((form, index) => (
           <div
             key={form.id}
-            className="bg-card border border-border rounded-xl p-6 transition-shadow hover:shadow-md relative"
+            className="sticky mb-3 will-change-transform"
+            style={{
+              top: `${index * 12}px`,
+              zIndex: index + 1,
+            }}
           >
+          <div
+            className="group relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 transition-all duration-500 ease-out hover:border-neutral-300 dark:hover:border-neutral-600 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] overflow-hidden cursor-default"
+          >
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
             {/* Card Header */}
             <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <h3 className="text-xl font-semibold text-foreground m-0">{form.name}</h3>
+              <h3 className="text-xl font-bold text-black dark:text-white m-0">{form.name}</h3>
               <div className="flex gap-2 flex-1 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-medium rounded-md">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-sm font-medium rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M11 6H10V4C10 2.34 8.66 1 7 1C5.34 1 4 2.34 4 4V6H3C2.45 6 2 6.45 2 7V12C2 12.55 2.45 13 3 13H11C11.55 13 12 12.55 12 12V7C12 6.45 11.55 6 11 6ZM7 10C6.45 10 6 9.55 6 9C6 8.45 6.45 8 7 8C7.55 8 8 8.45 8 9C8 9.55 7.55 10 7 10ZM5.1 6V4C5.1 2.95 5.95 2.1 7 2.1C8.05 2.1 8.9 2.95 8.9 4V6H5.1Z" fill="currentColor"/>
                   </svg>
@@ -231,7 +273,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
               {/* Three-dot Menu */}
               <div className="relative ml-auto" ref={openMenuId === form.id ? menuRef : null}>
                 <button
-                  className="p-2 bg-transparent border-none cursor-pointer text-muted-foreground rounded hover:bg-muted transition-colors"
+                  className="p-2 bg-transparent border-none cursor-pointer text-neutral-400 dark:text-neutral-500 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                   onClick={() => setOpenMenuId(openMenuId === form.id ? null : form.id)}
                   aria-label="Open actions"
                 >
@@ -242,7 +284,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                   </svg>
                 </button>
                 {openMenuId === form.id && (
-                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg min-w-[150px] z-10 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg min-w-[150px] z-10 overflow-hidden">
                     <button
                       className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
                       onClick={() => openDeleteModal(form.id, form.name)}
@@ -251,7 +293,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                     </button>
                     {form.reviewerId && (
                       <button
-                        className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-foreground cursor-pointer transition-colors hover:bg-muted"
+                        className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-black dark:text-white cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         onClick={() => handleCopyLink(form)}
                       >
                         Copy link
@@ -262,19 +304,22 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
               </div>
             </div>
 
+            {/* Divider */}
+            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-4" />
+
             {/* Card Body - Reviewer Dropdown */}
             <div className="mb-3">
               <div className="relative max-w-[280px]">
                 {updatingReviewerId === form.id && (
-                  <div className="absolute inset-0 bg-background/80 rounded-lg flex items-center justify-center z-10">
-                    <svg className="animate-spin h-5 w-5 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 rounded-lg flex items-center justify-center z-10">
+                    <svg className="animate-spin h-5 w-5 text-black dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </div>
                 )}
                 <select
-                  className="w-full py-3 px-4 bg-background border border-border rounded-lg text-sm text-muted-foreground cursor-pointer appearance-none pr-10 focus:outline-none focus:border-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer appearance-none pr-10 focus:outline-none focus:border-black dark:focus:border-white disabled:opacity-50 disabled:cursor-not-allowed"
                   value={form.reviewerId || ""}
                   onChange={(e) => handleReviewerChange(form.id, e.target.value)}
                   disabled={updatingReviewerId === form.id}
@@ -297,7 +342,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
             {/* Card Footer - Automatic replies */}
             {form.autoReplyEnabled && (
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground text-sm">
+                <span className="inline-flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 text-sm">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
                     <circle cx="8" cy="8" r="3" fill="currentColor"/>
@@ -307,7 +352,29 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
               </div>
             )}
           </div>
+          </div>
         ))}
+
+        {/* End of list indicator */}
+        {forms.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12 animate-fade-in-up">
+            <div className="relative mb-3">
+              <div className="absolute inset-0 rounded-full bg-black/5 dark:bg-white/5 animate-ping-slow" />
+              <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-black dark:bg-white">
+                <svg className="h-6 w-6 text-white dark:text-black animate-bounce-gentle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
+              End of forms
+            </p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
+              {forms.length} {forms.length === 1 ? "form" : "forms"} configured
+            </p>
+          </div>
+        )}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

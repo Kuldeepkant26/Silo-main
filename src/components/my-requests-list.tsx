@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Info, ChevronDown } from "lucide-react";
+import { Info, ChevronDown, ArrowUpRight, Clock, User, Scale, FileText, CheckCircle2 } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
@@ -353,17 +353,20 @@ export function MyRequestsList() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="border-2 border-foreground/15 rounded-xl px-6 py-5 bg-card text-center">
-          <p className="text-lg font-semibold text-foreground">
-            {unresolvedCount} Unresolved {unresolvedCount === 1 ? "request" : "requests"}
+        <div className="rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-black dark:bg-white px-6 py-6 text-center transition-all hover:shadow-lg">
+          <p className="text-2xl font-black text-white dark:text-black tracking-tight">
+            {unresolvedCount}
           </p>
-          <div className="flex items-center justify-center gap-1.5 mt-1">
-            <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+          <p className="text-sm font-medium text-white/60 dark:text-black/60 mt-1">
+            Unresolved {unresolvedCount === 1 ? "request" : "requests"}
+          </p>
+          <div className="flex items-center justify-center gap-1.5 mt-2">
+            <span className="text-xs text-white/40 dark:text-black/40 font-medium uppercase tracking-wider">
               Awaiting legal
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                <Info className="h-3.5 w-3.5 text-white/30 dark:text-black/30 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Requests pending legal review</p>
@@ -372,17 +375,20 @@ export function MyRequestsList() {
           </div>
         </div>
 
-        <div className="border-2 border-foreground/15 rounded-xl px-6 py-5 bg-card text-center">
-          <p className="text-lg font-semibold text-foreground">
-            {filteredItems.length} {filteredItems.length === 1 ? "request" : "requests"} total
+        <div className="rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-6 py-6 text-center transition-all hover:shadow-lg">
+          <p className="text-2xl font-black text-black dark:text-white tracking-tight">
+            {filteredItems.length}
           </p>
-          <div className="flex items-center justify-center gap-1.5 mt-1">
-            <span className="text-sm text-muted-foreground font-medium">
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mt-1">
+            Total {filteredItems.length === 1 ? "request" : "requests"}
+          </p>
+          <div className="flex items-center justify-center gap-1.5 mt-2">
+            <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider">
               {requestItems.filter((i) => i.workflowStatus === "DONE").length} completed
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                <Info className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Total and completed requests</p>
@@ -394,12 +400,12 @@ export function MyRequestsList() {
 
       {/* Search */}
       <div className="relative">
-        <Icons.search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Icons.search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
         <Input
           placeholder={t("search")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-12 h-12 text-base rounded-xl border-2 border-foreground/15 bg-card focus-visible:ring-foreground/20"
+          className="pl-12 h-12 text-base rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus-visible:ring-neutral-300 dark:focus-visible:ring-neutral-600"
         />
       </div>
 
@@ -407,7 +413,7 @@ export function MyRequestsList() {
       <div className="flex flex-wrap items-center gap-2.5">
         {/* Sort / Date */}
         <Select value={sortOrder} onValueChange={(value: SortOrder) => setSortOrder(value)}>
-          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-foreground/20 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
             <span>Date</span>
           </SelectTrigger>
           <SelectContent>
@@ -421,7 +427,7 @@ export function MyRequestsList() {
           value={selectedFilters.category} 
           onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}
         >
-          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-foreground/20 bg-card px-4 py-2 text-sm font-medium text-foreground data-[placeholder]:text-foreground hover:bg-muted transition-colors">
+          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white data-[placeholder]:text-black dark:data-[placeholder]:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
             <span>Category</span>
           </SelectTrigger>
           <SelectContent>
@@ -437,7 +443,7 @@ export function MyRequestsList() {
           value={selectedFilters.status} 
           onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, status: value === "all" ? "" : value }))}
         >
-          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-foreground/20 bg-card px-4 py-2 text-sm font-medium text-foreground data-[placeholder]:text-foreground hover:bg-muted transition-colors">
+          <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white data-[placeholder]:text-black dark:data-[placeholder]:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
             <span>Status</span>
           </SelectTrigger>
           <SelectContent>
@@ -455,7 +461,7 @@ export function MyRequestsList() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="rounded-full border-2 border-foreground/20 bg-card px-4 py-2 text-sm font-medium hover:bg-muted transition-colors gap-1.5 h-auto"
+              className="rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors gap-1.5 h-auto"
             >
               More filters
               <ChevronDown className="h-3.5 w-3.5" />
@@ -505,9 +511,9 @@ export function MyRequestsList() {
       </div>
       </div>
 
-      {/* Scrollable Request Cards */}
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-      <div className="space-y-1">
+      {/* Scrollable Request Cards — Overlapping Sticky Scroll */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 scroll-smooth" style={{ perspective: "1200px" }}>
+      <div className="relative pt-2 pb-[200px]">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Icons.tickets className="h-12 w-12 text-muted-foreground/50 mb-3" />
@@ -516,86 +522,146 @@ export function MyRequestsList() {
             </p>
           </div>
         ) : (
-          filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="group cursor-pointer rounded-xl border border-transparent hover:border-foreground/10 hover:bg-muted/50 transition-all px-4 py-4"
-              onClick={() => handleRowClick(item)}
-            >
-              {/* Date row */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground font-medium">
-                  {formatDate(item.createdAt)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {formatTime(item.createdAt)}
-                </span>
-              </div>
+          filteredItems.map((item, index) => {
+            const priorityMap: Record<string, { label: string; dot: string }> = {
+              HIGH: { label: "High", dot: "bg-white" },
+              MID: { label: "Medium", dot: "bg-neutral-400" },
+              LOW: { label: "Low", dot: "bg-neutral-600" },
+            };
+            const statusMap: Record<string, { label: string; classes: string }> = {
+              OPEN: { label: "Open", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              IN_PROGRESS: { label: "In Progress", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              DONE: { label: "Done", classes: "border-neutral-300 dark:border-neutral-600 bg-black dark:bg-white text-white dark:text-black" },
+              OVERDUE: { label: "Overdue", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              REOPEN: { label: "Reopened", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+            };
+            const priority = item.urgency ? priorityMap[item.urgency] : null;
+            const status = item.workflowStatus ? statusMap[item.workflowStatus] : null;
 
-              {/* Title row */}
-              <div className="flex items-start gap-2.5 mb-1.5">
-                <Badge
-                  variant="outline"
-                  className="shrink-0 rounded-md border-red-300 text-red-600 dark:border-red-700 dark:text-red-400 text-xs font-semibold px-2 py-0.5"
+            return (
+              <div
+                key={item.id}
+                className="sticky mb-3 will-change-transform"
+                style={{
+                  top: `${index * 12}px`,
+                  zIndex: index + 1,
+                }}
+              >
+                <div
+                  className={cn(
+                    "group relative cursor-pointer overflow-hidden rounded-2xl",
+                    "border-2 border-neutral-200 dark:border-neutral-700",
+                    "bg-white dark:bg-neutral-900",
+                    "shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)]",
+                    "hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)]",
+                    "transition-all duration-500 ease-out",
+                  )}
+                  onClick={() => handleRowClick(item)}
                 >
-                  ID: {item.id}
-                </Badge>
-                <h3 className="text-base font-semibold text-foreground leading-snug line-clamp-1">
-                  {item.title || "Untitled request"}
-                </h3>
+                  {/* Top accent line */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  <div className="p-5 sm:p-6">
+                    {/* Row 1: ID + Date/Time + Arrow */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center justify-center h-8 min-w-[56px] px-3 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-bold tracking-wider">
+                          #{item.id}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatDate(item.createdAt)}</span>
+                          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+                          <span>{formatTime(item.createdAt)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {item.type && (
+                          <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
+                            {item.type}
+                          </span>
+                        )}
+                        <ArrowUpRight className="h-4 w-4 text-neutral-300 dark:text-neutral-600 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Title */}
+                    <h3 className="text-lg sm:text-xl font-bold text-black dark:text-white leading-tight line-clamp-2 mb-1.5 group-hover:tracking-[-0.01em] transition-all duration-300">
+                      {item.title || "Untitled request"}
+                    </h3>
+
+                    {/* Row 3: Email */}
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 line-clamp-1">
+                      {item.email}
+                    </p>
+
+                    {/* Divider */}
+                    <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-4" />
+
+                    {/* Row 4: People + Meta */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      {/* Left: Legal + Reviewer */}
+                      <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="flex items-center gap-1.5">
+                          <Scale className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600" />
+                          <span className="text-neutral-400 dark:text-neutral-500">Legal:</span>
+                          <span className="font-medium text-neutral-700 dark:text-neutral-300">{item.legalName || "—"}</span>
+                        </div>
+                        <div className="hidden sm:block h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600" />
+                          <span className="text-neutral-400 dark:text-neutral-500">Reviewer:</span>
+                          <span className="font-medium text-neutral-700 dark:text-neutral-300">{item.reviewerName || "—"}</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Badges */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {item.category && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-2.5 py-1">
+                            <FileText className="h-3 w-3 text-neutral-400 dark:text-neutral-500" />
+                            {item.category}
+                          </span>
+                        )}
+                        {priority && (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-2.5 py-1">
+                            <span className={cn("h-1.5 w-1.5 rounded-full", priority.dot)} />
+                            {priority.label}
+                          </span>
+                        )}
+                        {status && (
+                          <span className={cn(
+                            "inline-flex items-center text-[11px] font-semibold rounded-lg px-2.5 py-1 border",
+                            status.classes,
+                          )}>
+                            {status.label}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            );
+          })
+        )}
 
-              {/* Description / email */}
-              <p className="text-sm text-muted-foreground line-clamp-1 mb-2 pl-0">
-                {item.email}
-              </p>
-
-              {/* Legal and Reviewer info */}
-              <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
-                <span>
-                  Legal: <span className="font-medium">{item.legalName || "Not set"}</span>
-                </span>
-                <span>•</span>
-                <span>
-                  Reviewer: <span className="font-medium">{item.reviewerName || "Not set"}</span>
-                </span>
+        {/* End of list indicator */}
+        {filteredItems.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12 animate-fade-in-up">
+            <div className="relative mb-3">
+              <div className="absolute inset-0 rounded-full bg-black/5 dark:bg-white/5 animate-ping-slow" />
+              <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-black dark:bg-white">
+                <CheckCircle2 className="h-6 w-6 text-white dark:text-black animate-bounce-gentle" />
               </div>
-
-              {/* Footer: category + status badges */}
-              <div className="flex items-center gap-3 flex-wrap">
-                {item.category && (
-                  <span className="text-xs text-muted-foreground italic">
-                    Category: {item.category}
-                  </span>
-                )}
-                {item.urgency && (
-                  <Badge className={cn(
-                    "text-xs font-medium px-2 py-0 rounded-md",
-                    item.urgency === "HIGH" && "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-                    item.urgency === "MID" && "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-                    item.urgency === "LOW" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-                  )}>
-                    {item.urgency}
-                  </Badge>
-                )}
-                {item.workflowStatus && (
-                  <Badge className={cn(
-                    "text-xs font-medium px-2 py-0 rounded-md",
-                    item.workflowStatus === "OPEN" && "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-                    item.workflowStatus === "IN_PROGRESS" && "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-                    item.workflowStatus === "DONE" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-                    item.workflowStatus === "OVERDUE" && "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-                    item.workflowStatus === "REOPEN" && "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-                  )}>
-                    {item.workflowStatus.replace("_", " ")}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Separator between cards */}
-              <div className="mt-4 border-b border-foreground/5 group-last:border-0" />
             </div>
-          ))
+            <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
+              End of results
+            </p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
+              {filteredItems.length} {filteredItems.length === 1 ? "request" : "requests"} displayed
+            </p>
+          </div>
         )}
       </div>
       </div>

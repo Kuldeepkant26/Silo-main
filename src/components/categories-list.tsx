@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
+import { api } from "~/trpc/react";
 
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
@@ -54,6 +55,25 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
     categoryName: "",
   });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState<{ isOpen: boolean; category: Category | null }>({
+    isOpen: false,
+    category: null,
+  });
+  const [editName, setEditName] = useState("");
+  const [editAssignedTeamId, setEditAssignedTeamId] = useState("");
+  const [editReviewerId, setEditReviewerId] = useState<string>("");
+  const [editAutoReplyEnabled, setEditAutoReplyEnabled] = useState(false);
+  const [editAutoReplyMessage, setEditAutoReplyMessage] = useState("");
+  const [isUpdatingEdit, setIsUpdatingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Fetch teams using tRPC
+  const { data: teams, isLoading: teamsLoading } = api.team.getAllByOrganization.useQuery(
+    undefined,
+    { enabled: editModal.isOpen }
+  );
   
   // Reviewer update loading state
   const [updatingReviewerId, setUpdatingReviewerId] = useState<string | null>(null);
@@ -154,6 +174,76 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
     setOpenMenuId(null);
   };
 
+  const openEditModal = (category: Category) => {
+    setEditModal({ isOpen: true, category });
+    setEditName(category.name);
+    setEditAssignedTeamId(category.assignedTeamId || "");
+    setEditReviewerId(category.reviewerId || "");
+    setEditAutoReplyEnabled(category.autoReplyEnabled);
+    setEditAutoReplyMessage(category.autoReplyMessage || "");
+    setEditError("");
+    setOpenMenuId(null);
+  };
+
+  const closeEditModal = () => {
+    setEditModal({ isOpen: false, category: null });
+    setEditName("");
+    setEditAssignedTeamId("");
+    setEditReviewerId("");
+    setEditAutoReplyEnabled(false);
+    setEditAutoReplyMessage("");
+    setEditError("");
+  };
+
+  const handleEditSave = async () => {
+    if (!editModal.category || !organizationId) return;
+
+    setIsUpdatingEdit(true);
+    setEditError("");
+
+    // Build payload with only changed fields
+    const original = editModal.category;
+    const payload: Record<string, unknown> = {};
+
+    if (editName.trim() !== original.name) payload.name = editName.trim();
+    if (editAssignedTeamId !== (original.assignedTeamId || "")) payload.assignedTeamId = editAssignedTeamId || null;
+    if (editAutoReplyEnabled !== original.autoReplyEnabled) payload.autoReplyEnabled = editAutoReplyEnabled;
+    if (editAutoReplyMessage !== (original.autoReplyMessage || "")) payload.autoReplyMessage = editAutoReplyEnabled ? editAutoReplyMessage : "";
+    if (editReviewerId !== (original.reviewerId || "")) payload.reviewerId = editReviewerId || null;
+
+    // Always include organizationId
+    payload.organizationId = organizationId;
+
+    if (Object.keys(payload).length === 1) {
+      // Only organizationId, nothing changed
+      closeEditModal();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/internal/update-category/${original.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": AUTH_TOKEN,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        await fetchCategories();
+        closeEditModal();
+        showToast("Category updated successfully");
+      } else {
+        setEditError("Failed to update category. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating category:", error);
+      setEditError("Failed to update category. Please try again.");
+    } finally {
+      setIsUpdatingEdit(false);
+    }
+  };
+
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, categoryId: "", categoryName: "" });
   };
@@ -190,42 +280,78 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
 
   if (loading) {
     return (
-      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-foreground mb-1.5">Loading...</p>
-        <p className="text-muted-foreground text-sm">Fetching your categories</p>
+      <div className="max-w-[1200px] space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 overflow-hidden"
+          >
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-black/[0.04] dark:via-white/[0.04] to-transparent" />
+
+            <div className="flex items-center gap-4 mb-5">
+              <div className="h-6 w-36 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-7 w-20 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+            </div>
+            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-5" />
+            <div className="h-11 w-64 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+        ))}
+
+        <div className="flex justify-center pt-6">
+          <div className="flex items-center gap-3">
+            <div className="relative h-5 w-5">
+              <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-700" />
+              <div className="absolute inset-0 rounded-full border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent animate-spin" />
+            </div>
+            <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">Loading categories...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (categories.length === 0) {
     return (
-      <div className="bg-card border border-dashed border-border p-6 rounded-xl max-w-[720px]">
-        <p className="text-xl font-bold text-foreground mb-1.5">No categories yet</p>
-        <p className="text-muted-foreground text-sm">Click "CREATE CATEGORY" to create your first category</p>
+      <div className="bg-white dark:bg-neutral-900 border-2 border-dashed border-neutral-200 dark:border-neutral-700 p-8 rounded-2xl max-w-[720px] text-center">
+        <div className="flex justify-center mb-4">
+          <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <svg className="h-6 w-6 text-neutral-400 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+          </div>
+        </div>
+        <p className="text-lg font-bold text-black dark:text-white mb-1">No categories yet</p>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm">Click &quot;CREATE CATEGORY&quot; to create your first category</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col gap-5 max-w-[1200px]">
-        {categories.map((category) => (
+      <div className="max-w-[1200px]" style={{ perspective: "1200px" }}>
+        <div className="relative pt-2 pb-[120px]">
+        {categories.map((category, index) => (
           <div
             key={category.id}
-            className="bg-card border border-border rounded-xl p-6 transition-shadow hover:shadow-md relative"
+            className="sticky mb-3 will-change-transform"
+            style={{
+              top: `${index * 12}px`,
+              zIndex: index + 1,
+            }}
           >
+          <div
+            className="group relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 transition-all duration-500 ease-out hover:border-neutral-300 dark:hover:border-neutral-600 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] overflow-hidden cursor-default"
+          >
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
             {/* Card Header */}
             <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <h3 className="text-xl font-semibold text-foreground m-0">{category.name}</h3>
+              <h3 className="text-xl font-bold text-black dark:text-white m-0">{category.name}</h3>
               <div className="flex gap-2 flex-1 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-md">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 2h4l1 1h5v8H2V2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Category
-                </span>
                 {category.assignedTeam && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-sm font-medium rounded-md">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-sm font-medium rounded-lg border border-neutral-200 dark:border-neutral-700">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <circle cx="7" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/>
                       <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -237,7 +363,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               {/* Three-dot Menu */}
               <div className="relative ml-auto" ref={openMenuId === category.id ? menuRef : null}>
                 <button
-                  className="p-2 bg-transparent border-none cursor-pointer text-muted-foreground rounded hover:bg-muted transition-colors"
+                  className="p-2 bg-transparent border-none cursor-pointer text-neutral-400 dark:text-neutral-500 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                   onClick={() => setOpenMenuId(openMenuId === category.id ? null : category.id)}
                   aria-label="Open actions"
                 >
@@ -248,7 +374,13 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   </svg>
                 </button>
                 {openMenuId === category.id && (
-                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg min-w-[150px] z-10 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg min-w-[150px] z-10 overflow-hidden">
+                    <button
+                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-black dark:text-white cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      onClick={() => openEditModal(category)}
+                    >
+                      Edit
+                    </button>
                     <button
                       className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
                       onClick={() => openDeleteModal(category.id, category.name)}
@@ -260,19 +392,22 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               </div>
             </div>
 
+            {/* Divider */}
+            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-4" />
+
             {/* Card Body - Reviewer Dropdown */}
             <div className="mb-3">
               <div className="relative max-w-[280px]">
                 {updatingReviewerId === category.id && (
-                  <div className="absolute inset-0 bg-background/80 rounded-lg flex items-center justify-center z-10">
-                    <svg className="animate-spin h-5 w-5 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 rounded-lg flex items-center justify-center z-10">
+                    <svg className="animate-spin h-5 w-5 text-black dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </div>
                 )}
                 <select
-                  className="w-full py-3 px-4 bg-background border border-border rounded-lg text-sm text-muted-foreground cursor-pointer appearance-none pr-10 focus:outline-none focus:border-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer appearance-none pr-10 focus:outline-none focus:border-black dark:focus:border-white disabled:opacity-50 disabled:cursor-not-allowed"
                   value={category.reviewerId || ""}
                   onChange={(e) => handleReviewerChange(category.id, e.target.value)}
                   disabled={updatingReviewerId === category.id}
@@ -295,7 +430,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             {/* Card Footer - Automatic replies */}
             {category.autoReplyEnabled && (
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground text-sm">
+                <span className="inline-flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 text-sm">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
                     <circle cx="8" cy="8" r="3" fill="currentColor"/>
@@ -305,7 +440,29 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               </div>
             )}
           </div>
+          </div>
         ))}
+
+        {/* End of list indicator */}
+        {categories.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12 animate-fade-in-up">
+            <div className="relative mb-3">
+              <div className="absolute inset-0 rounded-full bg-black/5 dark:bg-white/5 animate-ping-slow" />
+              <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-black dark:bg-white">
+                <svg className="h-6 w-6 text-white dark:text-black animate-bounce-gentle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
+              End of categories
+            </p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
+              {categories.length} {categories.length === 1 ? "category" : "categories"} configured
+            </p>
+          </div>
+        )}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -362,6 +519,157 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   "Delete"
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {editModal.isOpen && editModal.category && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={!isUpdatingEdit ? closeEditModal : undefined}
+          />
+          <div className="relative bg-card rounded-2xl shadow-2xl max-w-[520px] w-full mx-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="p-10">
+              <h2 className="text-2xl font-semibold text-foreground mb-2 leading-tight tracking-tight">
+                Edit Category
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Update the details for this category
+              </p>
+
+              {/* Category Name */}
+              <div className="mb-5">
+                <label className="text-sm font-medium text-foreground mb-2 block">Category Name</label>
+                <input
+                  type="text"
+                  className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background placeholder:text-muted-foreground hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Category name"
+                  disabled={isUpdatingEdit}
+                />
+              </div>
+
+              {/* Assigned Team Dropdown */}
+              <div className="mb-5">
+                <label className="text-sm font-medium text-foreground mb-2 block">Assign to Team (Optional)</label>
+                <div className="relative">
+                  <select
+                    className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background cursor-pointer appearance-none pr-10 hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    value={editAssignedTeamId}
+                    onChange={(e) => setEditAssignedTeamId(e.target.value)}
+                    disabled={isUpdatingEdit || teamsLoading}
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 16px center",
+                    }}
+                  >
+                    <option value="">{teamsLoading ? "Loading..." : "No team assigned"}</option>
+                    {(teams ?? []).map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                  {teamsLoading && (
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                      <svg className="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reviewer Dropdown */}
+              <div className="mb-5">
+                <label className="text-sm font-medium text-foreground mb-2 block">Reviewer</label>
+                <div className="relative">
+                  <select
+                    className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background cursor-pointer appearance-none pr-10 hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    value={editReviewerId}
+                    onChange={(e) => setEditReviewerId(e.target.value)}
+                    disabled={isUpdatingEdit}
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 16px center",
+                    }}
+                  >
+                    <option value="">Select Reviewer</option>
+                    {reviewers.map((reviewer) => (
+                      <option key={reviewer.id} value={reviewer.id}>
+                        {reviewer.name} ({reviewer.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Auto Reply Toggle */}
+              <div className="flex items-center justify-between py-3 border-t border-border">
+                <span className="text-sm font-medium text-foreground">Enable Auto Reply</span>
+                <button
+                  type="button"
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${editAutoReplyEnabled ? "bg-primary" : "bg-muted"}`}
+                  onClick={() => setEditAutoReplyEnabled(!editAutoReplyEnabled)}
+                  disabled={isUpdatingEdit}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-background rounded-full transition-transform duration-200 ${editAutoReplyEnabled ? "translate-x-5" : "translate-x-0"}`}
+                  />
+                </button>
+              </div>
+
+              {/* Auto Reply Message */}
+              {editAutoReplyEnabled && (
+                <div className="mt-4">
+                  <label className="text-sm font-medium text-foreground mb-2 block">Auto Reply Message</label>
+                  <textarea
+                    className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background placeholder:text-muted-foreground hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] resize-none min-h-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="Enter the auto-reply message..."
+                    value={editAutoReplyMessage}
+                    onChange={(e) => setEditAutoReplyMessage(e.target.value)}
+                    disabled={isUpdatingEdit}
+                  />
+                </div>
+              )}
+
+              {editError && (
+                <p className="text-sm text-red-500 mt-4">{editError}</p>
+              )}
+
+              <div className="flex gap-3 justify-center items-center mt-6">
+                <button
+                  className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-border bg-transparent text-foreground uppercase hover:bg-muted hover:border-muted-foreground active:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={closeEditModal}
+                  disabled={isUpdatingEdit}
+                >
+                  CANCEL
+                </button>
+                <button
+                  className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-primary bg-primary text-primary-foreground uppercase hover:bg-primary/90 hover:border-primary/90 active:bg-primary active:transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  onClick={handleEditSave}
+                  disabled={isUpdatingEdit || !editName.trim()}
+                >
+                  {isUpdatingEdit ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      SAVING...
+                    </>
+                  ) : (
+                    "SAVE"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

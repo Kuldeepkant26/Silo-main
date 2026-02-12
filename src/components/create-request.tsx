@@ -497,6 +497,7 @@ export function CreateRequest() {
                         placeholder="e.g. john@example.com"
                         type="email"
                         required
+                        disabled
                         {...field}
                       />
                     </FormControl>

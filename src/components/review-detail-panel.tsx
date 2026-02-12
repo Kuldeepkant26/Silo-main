@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2 } from "lucide-react";
+import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
+
+import {
+  ACCEPTED_FILE_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
+} from "~/lib/validators/request";
 
 import { createClient } from "@supabase/supabase-js";
 import { cn } from "~/lib/utils";
@@ -59,13 +65,94 @@ interface DetailedReview {
   created_at: string;
 }
 
+interface ChatAttachment {
+  Key: string;
+  Id: string;
+}
+
 interface ChatMessage {
   id: number;
   message: string;
-  attachments: string[];
+  attachments: ChatAttachment[] | string[];
   senderType: string;
   senderEmail: string;
   createdAt: string;
+}
+
+interface ChatUploadedFile {
+  file: File;
+  key: string;
+  id: string;
+  uploaded: boolean;
+  error?: string;
+}
+
+// Component to render a chat attachment with signed URL
+function ChatAttachmentPreview({ attKey, fileName, isImage, isCurrentUser }: {
+  attKey: string;
+  fileName: string;
+  isImage: boolean;
+  isCurrentUser: boolean;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUrl = async () => {
+      setLoading(true);
+      const filePath = attKey.startsWith("ticket-attachments/")
+        ? attKey.replace("ticket-attachments/", "")
+        : attKey;
+      const { data } = await supabase.storage
+        .from("ticket-attachments")
+        .createSignedUrl(filePath, 3600);
+      if (data?.signedUrl) {
+        setUrl(data.signedUrl);
+      }
+      setLoading(false);
+    };
+    fetchUrl();
+  }, [attKey]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-1 text-[11px] opacity-60">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Loading attachment...</span>
+      </div>
+    );
+  }
+
+  if (!url) return null;
+
+  if (isImage) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-border/30 mt-1">
+        <img
+          src={url}
+          alt={fileName}
+          className="max-w-full max-h-48 object-contain bg-muted/30 rounded-lg"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "flex items-center gap-2 rounded-lg px-3 py-2 mt-1 text-xs font-medium transition-colors border",
+        isCurrentUser
+          ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20"
+          : "bg-muted/50 border-border hover:bg-muted text-foreground"
+      )}
+    >
+      <FileText className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate max-w-[160px]">{fileName}</span>
+    </a>
+  );
 }
 
 export function ReviewDetailPanel({
@@ -95,6 +182,11 @@ export function ReviewDetailPanel({
   const [showEnhanced, setShowEnhanced] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Chat attachment state
+  const [chatAttachments, setChatAttachments] = useState<ChatUploadedFile[]>([]);
+  const [chatUploading, setChatUploading] = useState(false);
   const [detailedReview, setDetailedReview] = useState<DetailedReview | null>(null);
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,18 +307,79 @@ export function ReviewDetailPanel({
     messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [messages]);
 
+  // Handle chat file upload
+  const handleChatFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (chatAttachments.length + files.length > MAX_FILES_COUNT) {
+      return;
+    }
+
+    setChatUploading(true);
+    const newUploads: ChatUploadedFile[] = [];
+    const tempFolderTimestamp = Date.now();
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        newUploads.push({ file, key: "", id: crypto.randomUUID(), uploaded: false, error: `File exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit` });
+        continue;
+      }
+      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+        newUploads.push({ file, key: "", id: crypto.randomUUID(), uploaded: false, error: "Unsupported file type" });
+        continue;
+      }
+
+      const fileId = crypto.randomUUID();
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const filePath = `chat_${tempFolderTimestamp}/${timestamp}_${randomString}.${sanitizedFileName.split('.').pop()}`;
+
+      try {
+        const { data, error: uploadErr } = await supabase.storage
+          .from("ticket-attachments")
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+        if (uploadErr) {
+          newUploads.push({ file, key: "", id: fileId, uploaded: false, error: uploadErr.message });
+        } else {
+          newUploads.push({ file, key: `ticket-attachments/${data.path}`, id: fileId, uploaded: true });
+        }
+      } catch (err) {
+        newUploads.push({ file, key: "", id: fileId, uploaded: false, error: err instanceof Error ? err.message : "Upload failed" });
+      }
+    }
+
+    setChatAttachments(prev => [...prev, ...newUploads]);
+    setChatUploading(false);
+    e.target.value = "";
+  };
+
+  const handleRemoveChatAttachment = async (index: number) => {
+    const fileToRemove = chatAttachments[index];
+    if (fileToRemove?.uploaded && fileToRemove.key) {
+      const filePath = fileToRemove.key.replace("ticket-attachments/", "");
+      await supabase.storage.from("ticket-attachments").remove([filePath]);
+    }
+    setChatAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Send message
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !userId || !userEmail) return;
+    const hasMessage = newMessage.trim().length > 0;
+    if (!hasMessage || !userId || !userEmail || chatUploading) return;
     
     const messageText = newMessage.trim();
     const tempId = Date.now();
+    const successfulUploads = chatAttachments.filter(f => f.uploaded);
+    const attachmentPayload = successfulUploads.map(f => ({ Key: f.key, Id: f.id }));
     
     // Optimistic update - add message immediately to UI
     const tempMessage: ChatMessage = {
       id: tempId,
       message: messageText,
-      attachments: [],
+      attachments: attachmentPayload,
       senderType: "ADMIN",
       senderEmail: userEmail,
       createdAt: new Date().toISOString(),
@@ -234,6 +387,7 @@ export function ReviewDetailPanel({
     
     setMessages(prev => [...prev, tempMessage]);
     setNewMessage("");
+    setChatAttachments([]);
     setSendingMessage(true);
     
     try {
@@ -248,15 +402,14 @@ export function ReviewDetailPanel({
           body: JSON.stringify({
             user_id: userId,
             email: userEmail,
-            message: messageText,
-            attachments: [],
+            message: messageText || "",
+            attachments: attachmentPayload,
           }),
         }
       );
       
       if (response.ok) {
         const data = await response.json();
-        // Update the optimistic message with the actual server response if available
         if (data.message || data.id) {
           setMessages(prev => 
             prev.map(msg => 
@@ -267,16 +420,16 @@ export function ReviewDetailPanel({
           );
         }
       } else {
-        // Remove the optimistic message on error
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        setNewMessage(messageText); // Restore the message text
+        setNewMessage(messageText);
+        setChatAttachments(successfulUploads);
         console.error("Failed to send message");
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      // Remove the optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
-      setNewMessage(messageText); // Restore the message text
+      setNewMessage(messageText);
+      setChatAttachments(successfulUploads);
     } finally {
       setSendingMessage(false);
     }
@@ -597,9 +750,30 @@ export function ReviewDetailPanel({
                               : "bg-white dark:bg-muted border border-border text-foreground rounded-tl-sm shadow-sm"
                           )}
                         >
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                            {msg.message}
-                          </p>
+                          {msg.message && (
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {msg.message}
+                            </p>
+                          )}
+                          {/* Render message attachments */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className={cn("space-y-1.5", msg.message && "mt-2")}>
+                              {msg.attachments.map((att, attIdx) => {
+                                const attKey = typeof att === "string" ? att : att.Key;
+                                const fileName = attKey.split("/").pop() || "attachment";
+                                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
+                                return (
+                                  <ChatAttachmentPreview
+                                    key={attIdx}
+                                    attKey={attKey}
+                                    fileName={fileName}
+                                    isImage={isImage}
+                                    isCurrentUser={!!isCurrentUser}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
                           <p className={cn(
                             "text-[10px] mt-2 flex items-center gap-1",
                             isCurrentUser ? "text-primary-foreground/60" : "text-muted-foreground"
@@ -724,6 +898,74 @@ export function ReviewDetailPanel({
 
             {/* Message Input */}
             <div className="p-3 border-t border-border bg-card dark:bg-muted/30 backdrop-blur-sm">
+              {/* Pending Attachment Previews */}
+              {chatAttachments.length > 0 && (
+                <div className="mb-2 rounded-xl bg-muted/40 border border-border/50 p-2">
+                  <div className="flex flex-wrap gap-2">
+                    {chatAttachments.map((att, index) => {
+                      const isImage = att.file.type.startsWith("image/");
+                      const previewUrl = isImage && att.uploaded ? URL.createObjectURL(att.file) : null;
+                      return (
+                        <div
+                          key={att.id}
+                          className={cn(
+                            "relative group rounded-xl overflow-hidden border transition-all",
+                            isImage ? "w-20 h-20" : "flex items-center gap-2 px-3 py-2",
+                            att.uploaded
+                              ? "border-border bg-background shadow-sm"
+                              : att.error
+                                ? "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20"
+                                : "border-border bg-muted animate-pulse"
+                          )}
+                        >
+                          {isImage && previewUrl ? (
+                            <img
+                              src={previewUrl}
+                              alt={att.file.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : isImage ? (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          ) : (
+                            <>
+                              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <span className="max-w-[100px] truncate text-xs text-foreground/80">
+                                {att.file.name}
+                              </span>
+                            </>
+                          )}
+                          {att.error && !isImage && (
+                            <span className="text-[10px] text-red-500" title={att.error}>!</span>
+                          )}
+                          {/* Remove button overlay */}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleRemoveChatAttachment(index); }}
+                            className={cn(
+                              "absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
+                              !isImage && "relative top-auto right-auto bg-transparent opacity-100 ml-auto"
+                            )}
+                          >
+                            <X className={cn("h-3 w-3", isImage ? "text-white" : "text-muted-foreground hover:text-destructive")} />
+                          </button>
+                          {att.error && isImage && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-red-50/80 dark:bg-red-900/40">
+                              <span className="text-[9px] text-red-600 font-medium">Error</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {chatUploading && (
+                      <div className="flex items-center justify-center w-20 h-20 rounded-xl border border-dashed border-border bg-muted/50">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* AI Buttons */}
               <div className="flex items-center justify-end gap-2 mb-2">
                 {/* Enhance Button */}
@@ -814,8 +1056,38 @@ export function ReviewDetailPanel({
                   {loadingSuggestions ? "Thinking..." : showSuggestions ? "Hide AI" : "AI Suggest"}
                 </Button>
               </div>
-              <div className="flex gap-2 items-end">
-                <div className="flex-1 relative">
+              <div className="flex items-center gap-2">
+                {/* Hidden file input */}
+                <input
+                  ref={chatFileInputRef}
+                  type="file"
+                  className="hidden"
+                  multiple
+                  accept={ACCEPTED_FILE_TYPES.join(",")}
+                  onChange={handleChatFileChange}
+                  disabled={chatUploading || chatAttachments.length >= MAX_FILES_COUNT}
+                />
+                {/* Attach button */}
+                <button
+                  type="button"
+                  onClick={() => chatFileInputRef.current?.click()}
+                  disabled={chatUploading || chatAttachments.length >= MAX_FILES_COUNT || sendingMessage}
+                  className={cn(
+                    "flex items-center justify-center h-10 w-10 shrink-0 rounded-xl transition-all duration-200 border disabled:opacity-40 disabled:cursor-not-allowed",
+                    chatAttachments.length > 0
+                      ? "text-primary border-primary/30 bg-primary/5 hover:bg-primary/10"
+                      : "text-muted-foreground border-border hover:text-foreground hover:bg-muted"
+                  )}
+                  title={chatAttachments.length >= MAX_FILES_COUNT ? `Max ${MAX_FILES_COUNT} files` : "Attach files"}
+                >
+                  {chatUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-4 w-4" />
+                  )}
+                </button>
+                {/* Textarea */}
+                <div className="flex-1 min-w-0">
                   <textarea
                     ref={textareaRef}
                     value={newMessage}
@@ -823,14 +1095,16 @@ export function ReviewDetailPanel({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendMessage();
+                        if (newMessage.trim()) {
+                          handleSendMessage();
+                        }
                       }
                     }}
                     placeholder="Type your message..."
                     rows={1}
-                    className="w-full min-h-[48px] max-h-[120px] px-4 py-3 rounded-2xl border border-border bg-background dark:bg-muted focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 placeholder:text-muted-foreground resize-none text-sm"
+                    className="w-full h-10 min-h-[40px] max-h-[120px] px-4 py-2.5 rounded-xl border border-border bg-background dark:bg-muted focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 placeholder:text-muted-foreground resize-none text-sm leading-tight"
                     disabled={sendingMessage}
-                    style={{ height: 'auto', overflow: 'hidden' }}
+                    style={{ overflow: 'hidden' }}
                     onInput={(e) => {
                       const target = e.target as HTMLTextAreaElement;
                       target.style.height = 'auto';
@@ -838,25 +1112,26 @@ export function ReviewDetailPanel({
                     }}
                   />
                 </div>
-                <Button
+                {/* Send button */}
+                <button
+                  type="button"
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sendingMessage}
-                  size="icon"
+                  disabled={!newMessage.trim() || sendingMessage || chatUploading}
                   className={cn(
-                    "h-12 w-12 rounded-2xl transition-all duration-300 shadow-lg",
-                    newMessage.trim() 
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 hover:shadow-xl" 
+                    "flex items-center justify-center h-10 w-10 shrink-0 rounded-xl transition-all duration-300 disabled:cursor-not-allowed",
+                    newMessage.trim()
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg" 
                       : "bg-muted dark:bg-muted/50 text-muted-foreground shadow-none"
                   )}
                 >
                   <Send className={cn(
-                    "h-5 w-5 transition-transform duration-200",
+                    "h-4 w-4 transition-transform duration-200",
                     sendingMessage && "animate-pulse",
-                    newMessage.trim() && "translate-x-0.5 -translate-y-0.5"
+                    newMessage.trim() && "translate-x-px -translate-y-px"
                   )} />
-                </Button>
+                </button>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 text-center">
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
                 Press Enter to send • Shift + Enter for new line
               </p>
             </div>

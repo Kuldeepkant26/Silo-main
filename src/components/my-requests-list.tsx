@@ -55,6 +55,9 @@ interface Ticket {
   priority: "HIGH" | "MID" | "LOW" | null;
   workflowStatus: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null;
   legalOwnerId: string | null;
+  reviewerId: string | null;
+  legalName: string | null;
+  reviewerName: string | null;
   summary: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -73,6 +76,8 @@ interface RequestItem {
   type: string;
   title: string;
   email: string;
+  legalName: string | null;
+  reviewerName: string | null;
   createdAt: string;
   startDate: string | null;
   endDate: string | null;
@@ -183,6 +188,8 @@ export function MyRequestsList() {
         ? (ticket.summary || "") 
         : (ticket.requestForm?.name || ""),
       email: ticket.email || "",
+      legalName: ticket.legalName || null,
+      reviewerName: ticket.reviewerName || null,
       createdAt: ticket.createdAt,
       startDate: ticket.startDate,
       endDate: ticket.endDate,
@@ -542,6 +549,17 @@ export function MyRequestsList() {
               <p className="text-sm text-muted-foreground line-clamp-1 mb-2 pl-0">
                 {item.email}
               </p>
+
+              {/* Legal and Reviewer info */}
+              <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
+                <span>
+                  Legal: <span className="font-medium">{item.legalName || "Not set"}</span>
+                </span>
+                <span>•</span>
+                <span>
+                  Reviewer: <span className="font-medium">{item.reviewerName || "Not set"}</span>
+                </span>
+              </div>
 
               {/* Footer: category + status badges */}
               <div className="flex items-center gap-3 flex-wrap">

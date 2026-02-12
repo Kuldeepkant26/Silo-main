@@ -372,7 +372,7 @@ export function ReviewList() {
           onClick={() => {
             setError(null);
             setLoading(true);
-            fetchReviewers();
+            fetchTickets();
           }}
         >
           Retry

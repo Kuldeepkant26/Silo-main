@@ -98,7 +98,7 @@ export function InvitationsList() {
 
     await authClient.organization.inviteMember({
       email: invitation.email,
-      role: invitation.role as Role,
+      role: invitation.role as "owner" | "admin" | "member",
       organizationId: invitation.organizationId,
       resend: true,
     });

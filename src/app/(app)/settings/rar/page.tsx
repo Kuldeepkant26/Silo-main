@@ -96,7 +96,7 @@ export default function SettingsRequestsAndReviewsPage() {
       </div>
 
       {/* Scrollable tab content */}
-      <div className="flex-1 min-h-0 overflow-y-auto max-w-[1200px] w-full">
+      <div className="flex-1 min-h-0 overflow-y-auto max-w-[1200px] w-full scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Tab Content */}
         {activeTab === "categories" && (
           <CategoriesList refreshTrigger={categoriesRefreshTrigger} />

@@ -512,7 +512,7 @@ export function MyRequestsList() {
       </div>
 
       {/* Scrollable Request Cards — Overlapping Sticky Scroll */}
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1 scroll-smooth" style={{ perspective: "1200px" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ perspective: "1200px" }}>
       <div className="relative pt-2 pb-[200px]">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">

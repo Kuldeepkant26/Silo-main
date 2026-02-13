@@ -210,7 +210,8 @@ export function TeamsList() {
           <Icons.search className="text-primary absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
         </div>
 
-        <Table className="-mx-2 w-full">
+        <div className="overflow-x-auto">
+        <Table className="-mx-2 w-full min-w-[500px]">
           <TableCaption>{t("teams_list_caption")}</TableCaption>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -257,6 +258,7 @@ export function TeamsList() {
             )}
           </TableBody>
         </Table>
+        </div>
 
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="text-muted-foreground flex-1 text-sm">

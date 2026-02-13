@@ -9,7 +9,7 @@ export default function ChatsPage() {
   const t = useTranslations();
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-4 sm:gap-6 p-4 sm:p-6">
       <SectionHeader title={t("chats")} />
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">

@@ -8,9 +8,9 @@ export default function ReviewPage() {
   const t = useTranslations();
 
   return (
-    <section className="flex flex-col p-4 md:p-10">
-      <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">{t("review")}</h1>
+    <section className="flex flex-col p-4 sm:p-6 md:p-10">
+      <header className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{t("review")}</h1>
       </header>
 
       <Suspense fallback={<ReviewListSkeleton />}>

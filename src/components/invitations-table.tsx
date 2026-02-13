@@ -30,7 +30,8 @@ export function InvitationsTable({ invitations }: InvitationsTableProps) {
       {t("invitations_list_not_found")}
     </p>
   ) : (
-    <Table className="w-full">
+    <div className="overflow-x-auto">
+    <Table className="w-full min-w-[500px]">
       <TableCaption>{t("invitations_list_caption")}</TableCaption>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
@@ -53,5 +54,6 @@ export function InvitationsTable({ invitations }: InvitationsTableProps) {
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }

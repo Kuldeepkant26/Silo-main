@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
+import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2, Calendar, Scale, User, Tag, Mail, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
 
 import {
   ACCEPTED_FILE_TYPES,
@@ -44,6 +44,13 @@ interface ReviewDetailPanelProps {
     email: string;
     createdAt: string;
     urgency: "LOW" | "HIGH" | "MID" | null;
+    legalName?: string | null;
+    reviewerName?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    reviewed?: boolean;
+    workflowStatus?: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null;
+    category?: string | null;
   };
   onClose: () => void;
   onNavigate: (direction: "prev" | "next") => void;
@@ -508,11 +515,41 @@ export function ReviewDetailPanel({
             <p>{error}</p>
           </div>
         ) : activeTab === "details" && detailedReview ? (
-          <div className="space-y-6">
-            {/* Attachments - at the top */}
+          <div className="space-y-5">
+            {/* Title & ID Header */}
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center justify-center h-7 min-w-[48px] px-2.5 rounded-md bg-black dark:bg-white text-white dark:text-black text-xs font-bold tracking-wider">
+                  #{detailedReview.id}
+                </span>
+                {review.type && (
+                  <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
+                    {review.type}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-lg font-bold text-foreground leading-tight mt-2">
+                {review.title || "Untitled request"}
+              </h2>
+              {review.email && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">{review.email}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Attachments */}
             {detailedReview.payload?.attachments && detailedReview.payload.attachments.length > 0 && (
               <div>
-                <div className="bg-muted dark:bg-muted/50 rounded-lg p-4">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  Attachments
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 ml-1">
+                    {detailedReview.payload.attachments.length}
+                  </Badge>
+                </label>
+                <div className="bg-muted dark:bg-muted/50 rounded-lg p-3">
                   {attachmentUrls.length > 0 ? (
                     <div className="space-y-3">
                       {attachmentUrls.map((url, index) => {
@@ -520,7 +557,7 @@ export function ReviewDetailPanel({
                         const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
                         
                         return (
-                          <div key={index} className="bg-card rounded border border-border overflow-hidden">
+                          <div key={index} className="bg-card rounded-lg border border-border overflow-hidden">
                             {isImage ? (
                               <a href={url} target="_blank" rel="noopener noreferrer" className="block">
                                 <img
@@ -564,80 +601,164 @@ export function ReviewDetailPanel({
               </div>
             )}
 
-            {/* ID and Status */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-muted-foreground">ID: {detailedReview.id}</span>
-                {detailedReview.workflowStatus && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "rounded text-xs",
-                      detailedReview.workflowStatus === "OPEN" && "border-blue-500 text-blue-500",
-                      detailedReview.workflowStatus === "DONE" && "border-green-500 text-green-500",
-                      detailedReview.workflowStatus === "OVERDUE" && "border-red-500 text-red-500",
-                      detailedReview.workflowStatus === "REOPEN" && "border-orange-500 text-orange-500"
-                    )}
-                  >
-                    {detailedReview.workflowStatus}
-                  </Badge>
-                )}
-                {detailedReview.priority && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "rounded text-xs",
-                      detailedReview.priority === "HIGH" && "border-red-500 text-red-500",
-                      detailedReview.priority === "MID" && "border-yellow-500 text-yellow-500",
-                      detailedReview.priority === "LOW" && "border-green-500 text-green-500"
-                    )}
-                  >
-                    {detailedReview.priority}
-                  </Badge>
-                )}
+            {/* Status & Priority Badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              {(detailedReview.workflowStatus || review.workflowStatus) && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "rounded-md text-xs font-semibold px-2.5 py-1",
+                    (detailedReview.workflowStatus || review.workflowStatus) === "OPEN" && "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30",
+                    (detailedReview.workflowStatus || review.workflowStatus) === "IN_PROGRESS" && "border-violet-500 text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30",
+                    (detailedReview.workflowStatus || review.workflowStatus) === "DONE" && "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30",
+                    (detailedReview.workflowStatus || review.workflowStatus) === "OVERDUE" && "border-red-500 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30",
+                    (detailedReview.workflowStatus || review.workflowStatus) === "REOPEN" && "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30"
+                  )}
+                >
+                  {(detailedReview.workflowStatus || review.workflowStatus)?.replace(/_/g, " ")}
+                </Badge>
+              )}
+              {(detailedReview.priority || review.urgency) && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "rounded-md text-xs font-semibold px-2.5 py-1",
+                    (detailedReview.priority || review.urgency) === "HIGH" && "border-red-500 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30",
+                    (detailedReview.priority || review.urgency) === "MID" && "border-yellow-500 text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30",
+                    (detailedReview.priority || review.urgency) === "LOW" && "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30"
+                  )}
+                >
+                  {(detailedReview.priority || review.urgency) === "MID" ? "Medium" : (detailedReview.priority || review.urgency)} Priority
+                </Badge>
+              )}
+              {review.reviewed !== undefined && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "rounded-md text-xs font-semibold px-2.5 py-1",
+                    review.reviewed
+                      ? "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30"
+                      : "border-neutral-300 text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800"
+                  )}
+                >
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  {review.reviewed ? "Reviewed" : "Not Reviewed"}
+                </Badge>
+              )}
+            </div>
+
+            {/* Key Details Grid */}
+            <div className="rounded-xl border border-border bg-muted/30 dark:bg-muted/20 divide-y divide-border">
+              {/* Category */}
+              {review.category && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Category</p>
+                    <p className="text-sm font-medium text-foreground truncate">{review.category}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Created Date */}
+              <div className="flex items-center gap-3 px-4 py-3">
+                <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Created</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {new Date(detailedReview.created_at || review.createdAt).toLocaleDateString('en-US', { 
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {new Date(detailedReview.created_at).toLocaleDateString('en-US', { 
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
+
+              {/* Start Date */}
+              {review.startDate && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Start Date</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {new Date(review.startDate).toLocaleDateString('en-US', { 
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* End Date */}
+              {review.endDate && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">End Date</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {new Date(review.endDate).toLocaleDateString('en-US', { 
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Legal Owner */}
+              {(review.legalName || detailedReview.legalOwnerId) && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Scale className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Legal Owner</p>
+                    <p className="text-sm font-medium text-foreground">{review.legalName || detailedReview.legalOwnerId}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Reviewer */}
+              {review.reviewerName && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Reviewer</p>
+                    <p className="text-sm font-medium text-foreground">{review.reviewerName}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Assigned Team */}
+              {detailedReview.assignedTeamId && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Assigned Team</p>
+                    <Badge className="bg-green-600 dark:bg-green-700 text-white rounded px-2.5 text-xs mt-0.5">
+                      {detailedReview.assignedTeamId}
+                    </Badge>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Description */}
             {detailedReview.description && (
               <div>
-                <label className="text-sm font-medium text-foreground block mb-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
                   Description
                 </label>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {detailedReview.description}
-                </p>
-              </div>
-            )}
-
-            {/* Legal Owner */}
-            {detailedReview.legalOwnerId && (
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-2">
-                  Legal Owner
-                </label>
-                <p className="text-sm text-muted-foreground">{detailedReview.legalOwnerId}</p>
-              </div>
-            )}
-
-            {/* Assigned Team */}
-            {detailedReview.assignedTeamId && (
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-2">
-                  Assigned Team
-                </label>
-                <Badge className="bg-green-600 dark:bg-green-700 text-white rounded px-3">
-                  {detailedReview.assignedTeamId}
-                </Badge>
+                <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-3.5 border border-border">
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {detailedReview.description}
+                  </p>
+                </div>
               </div>
             )}
           </div>

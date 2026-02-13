@@ -130,6 +130,7 @@ export function CreateRequest() {
 
   const form = useForm<z.infer<typeof internalRequestSchema>>({
     resolver: zodResolver(internalRequestSchema),
+    mode: "onChange",
     defaultValues: {
       name: userName,
       email: userEmail,
@@ -142,10 +143,10 @@ export function CreateRequest() {
   // Update form values when user data is available
   useEffect(() => {
     if (userName) {
-      form.setValue("name", userName);
+      form.setValue("name", userName, { shouldValidate: true });
     }
     if (userEmail) {
-      form.setValue("email", userEmail);
+      form.setValue("email", userEmail, { shouldValidate: true });
     }
   }, [userName, userEmail, form]);
 

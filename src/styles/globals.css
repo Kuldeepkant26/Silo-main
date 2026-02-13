@@ -291,3 +291,30 @@
     transform: translateX(200%);
   }
 }
+
+/* ─── SILO Agent Chat ──────────────────────────────────────────────────────── */
+
+.silo-typing-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: hsl(var(--muted-foreground) / 0.45);
+  animation: silo-bounce 1.4s ease-in-out infinite both;
+}
+
+@keyframes silo-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+.silo-msg-enter {
+  animation: silo-fade-up 0.25s ease-out both;
+}
+
+@keyframes silo-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.silo-prose p:last-child { margin-bottom: 0; }

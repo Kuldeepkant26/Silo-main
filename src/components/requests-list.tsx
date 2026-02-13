@@ -420,8 +420,8 @@ export function RequestsList() {
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden bg-card">
-        <Table>
+      <div className="border rounded-lg overflow-hidden bg-card overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow className="bg-card hover:bg-card border-b">
               <TableHead className="font-bold text-foreground">Source</TableHead>

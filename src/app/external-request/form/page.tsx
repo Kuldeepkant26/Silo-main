@@ -221,20 +221,20 @@ export default function ExternalRequestFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-10 py-[60px] font-[system-ui]">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 md:px-10 py-8 sm:py-12 md:py-[60px] font-[system-ui]">
       <div className="w-full">
-        <div className="flex justify-start mb-[50px]">
+        <div className="flex justify-start mb-8 sm:mb-10 md:mb-[50px] px-1">
           <Image
             src="/Silomainlogo.png"
             alt="SILO"
             width={100}
             height={100}
-            className="h-[100px] w-auto object-contain"
+            className="h-16 sm:h-20 md:h-[100px] w-auto object-contain"
           />
         </div>
 
-        <div className="max-w-[560px] w-full px-[60px] py-10 mx-auto animate-in fade-in duration-500">
-          <h1 className="text-[32px] font-semibold text-[#1a1a1a] mb-10 tracking-tight">
+        <div className="max-w-[560px] w-full px-2 sm:px-6 md:px-[60px] py-6 sm:py-8 md:py-10 mx-auto animate-in fade-in duration-500">
+          <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-[#1a1a1a] mb-6 sm:mb-8 md:mb-10 tracking-tight">
             Send us your inquiry
           </h1>
 
@@ -437,10 +437,10 @@ export default function ExternalRequestFormPage() {
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
 
-            <div className="flex gap-4 justify-center pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-2">
               <button
                 type="button"
-                className="px-8 py-[14px] text-sm font-bold tracking-[0.8px] rounded-[28px] cursor-pointer transition-all duration-200 border-2 border-[#e5e7eb] bg-transparent text-[#1a1a1a] uppercase hover:bg-[#f9fafb] active:bg-[#f3f4f6] md:px-12 lg:px-16 lg:min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-8 py-[14px] text-sm font-bold tracking-[0.8px] rounded-[28px] cursor-pointer transition-all duration-200 border-2 border-[#e5e7eb] bg-transparent text-[#1a1a1a] uppercase hover:bg-[#f9fafb] active:bg-[#f3f4f6] sm:px-10 md:px-12 lg:px-16 lg:min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleCancel}
                 disabled={isSubmitting}
               >
@@ -448,7 +448,7 @@ export default function ExternalRequestFormPage() {
               </button>
               <button
                 type="submit"
-                className="px-8 py-[14px] text-sm font-bold tracking-[0.8px] rounded-[28px] cursor-pointer transition-all duration-200 border-2 border-[#1a1a1a] bg-[#1a1a1a] text-white uppercase hover:bg-[#333] hover:border-[#333] active:scale-[0.98] md:px-12 lg:px-16 lg:min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-8 py-[14px] text-sm font-bold tracking-[0.8px] rounded-[28px] cursor-pointer transition-all duration-200 border-2 border-[#1a1a1a] bg-[#1a1a1a] text-white uppercase hover:bg-[#333] hover:border-[#333] active:scale-[0.98] sm:px-10 md:px-12 lg:px-16 lg:min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "SUBMITTING..." : "SAVE"}

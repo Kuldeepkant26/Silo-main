@@ -11,22 +11,22 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-dvh bg-background flex flex-col font-sans overflow-x-hidden">
       {/* Header */}
-      <header className="flex justify-between items-center px-[60px] py-8 w-full shrink-0">
+      <header className="flex justify-between items-center px-5 sm:px-8 md:px-[60px] py-6 md:py-8 w-full shrink-0">
         <Logo width={70} height={70} />
         <Link
           href={ROUTES.LOGIN}
-          className="bg-transparent border-none text-base font-medium text-green-600 dark:text-green-400 cursor-pointer transition-colors px-4 py-2 rounded-lg hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30"
+          className="bg-transparent border-none text-sm sm:text-base font-medium text-green-600 dark:text-green-400 cursor-pointer transition-colors px-3 sm:px-4 py-2 rounded-lg hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30"
         >
           {t("sign_in")}
         </Link>
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-1 px-[60px] pb-[60px] pt-5 gap-[60px] items-center justify-center w-full">
-        <div className="flex-1 max-w-[520px] w-full pl-10">
+      <main className="flex flex-1 px-5 sm:px-8 md:px-[60px] pb-8 md:pb-[60px] pt-5 gap-8 md:gap-[60px] items-center justify-center w-full flex-col md:flex-row">
+        <div className="flex-1 max-w-[520px] w-full md:pl-10">
           <Link
             href={ROUTES.LOGIN}
-            className="inline-flex items-center gap-2 bg-transparent border-none text-base font-medium text-green-600 dark:text-green-400 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700 dark:hover:text-green-300"
+            className="inline-flex items-center gap-2 bg-transparent border-none text-sm sm:text-base font-medium text-green-600 dark:text-green-400 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700 dark:hover:text-green-300"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
               <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
             Back
           </Link>
           
-          <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
             {t("forgot_password")}
           </h1>
           <p className="text-base text-muted-foreground mb-7 leading-relaxed">
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <ForgotPassword />
         </div>
 
-        <div className="flex items-center justify-center max-w-[400px]">
+        <div className="hidden md:flex items-center justify-center max-w-[400px]">
           <div className="flex h-80 w-80 items-center justify-center rounded-[20px]">
             <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
               <rect x="25" y="45" width="50" height="40" rx="5" />
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
       </main>
 
       {/* Footer */}
-      <footer className="flex items-center justify-between px-[60px] py-4 shrink-0">
+      <footer className="flex items-center justify-between px-5 sm:px-8 md:px-[60px] py-4 shrink-0">
         <button className="bg-transparent border-none text-sm text-muted-foreground cursor-pointer hover:text-foreground">
           English
         </button>

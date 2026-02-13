@@ -24,7 +24,7 @@ export default function ExternalRequestVerifyPage() {
 
   return (
     <div className="min-h-screen bg-white block px-0 pt-0 pb-0 font-[system-ui]">
-      <div className="flex items-center gap-[30px] pt-[60px] pl-[100px] mb-20">
+      <div className="flex items-center gap-4 sm:gap-[30px] pt-8 sm:pt-12 md:pt-[60px] px-5 sm:px-8 md:px-16 lg:px-[100px] mb-10 sm:mb-14 md:mb-20">
         <div className="flex justify-start mb-0">
           <Image
             src="/Silomainlogo.png"
@@ -66,8 +66,8 @@ export default function ExternalRequestVerifyPage() {
         </div>
       </div>
 
-      <div className="pl-[270px] max-w-[600px]">
-        <form onSubmit={handleContinue} className="flex flex-col gap-[35px]">
+      <div className="px-5 sm:px-8 md:px-16 lg:px-[100px] max-w-[600px] lg:ml-[170px]">
+        <form onSubmit={handleContinue} className="flex flex-col gap-6 sm:gap-[35px]">
           <div className="flex flex-col gap-3">
             <label className="text-base font-medium text-[#1a1a1a] tracking-tight">
               Name

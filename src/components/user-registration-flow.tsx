@@ -198,12 +198,12 @@ export function UserRegistrationFlow() {
 
   // Render stepper
   const renderStepper = () => (
-    <div className="flex items-center gap-3">
-      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.YOU ? "text-foreground underline underline-offset-4" : currentStep > STEPS.YOU ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
+    <div className="flex items-center gap-2 sm:gap-3">
+      <span className={`text-sm sm:text-base font-medium transition-colors ${currentStep === STEPS.YOU ? "text-foreground underline underline-offset-4" : currentStep > STEPS.YOU ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
         You
       </span>
       <span className="text-muted-foreground">→</span>
-      <span className={`text-base font-medium transition-colors ${currentStep === STEPS.SECURITY ? "text-foreground underline underline-offset-4" : "text-muted-foreground/60"}`}>
+      <span className={`text-sm sm:text-base font-medium transition-colors ${currentStep === STEPS.SECURITY ? "text-foreground underline underline-offset-4" : "text-muted-foreground/60"}`}>
         Security
       </span>
     </div>
@@ -211,7 +211,7 @@ export function UserRegistrationFlow() {
 
   // Illustrations
   const renderUserIllustration = () => (
-    <div className="flex h-80 w-80 items-center justify-center rounded-[20px]">
+    <div className="hidden md:flex h-80 w-80 items-center justify-center rounded-[20px]">
       <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
         <circle cx="50" cy="35" r="18" />
         <path d="M20 85c0-16.57 13.43-30 30-30s30 13.43 30 30" strokeLinecap="round" />
@@ -220,7 +220,7 @@ export function UserRegistrationFlow() {
   );
 
   const renderLockIllustration = () => (
-    <div className="flex h-80 w-80 items-center justify-center rounded-[20px]">
+    <div className="hidden md:flex h-80 w-80 items-center justify-center rounded-[20px]">
       <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
         <rect x="25" y="45" width="50" height="40" rx="5" />
         <path d="M35 45V35c0-8.28 6.72-15 15-15s15 6.72 15 15v10" strokeLinecap="round" />
@@ -235,8 +235,8 @@ export function UserRegistrationFlow() {
     if (currentStep === STEPS.YOU) {
       return (
         <>
-          <div className="flex-1 max-w-[520px] w-full pl-10">
-            <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
+          <div className="flex-1 max-w-[520px] w-full md:pl-10">
+            <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
               Tell us about you
             </h1>
 
@@ -254,7 +254,7 @@ export function UserRegistrationFlow() {
                 />
               </div>
 
-              <div className="flex gap-5">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                 <div className="flex-1 flex flex-col gap-2.5">
                   <label className="text-[15px] font-medium text-foreground">First name</label>
                   <input
@@ -288,9 +288,7 @@ export function UserRegistrationFlow() {
               </button>
             </form>
           </div>
-          <div className="flex items-center justify-center max-w-[400px]">
-            {renderUserIllustration()}
-          </div>
+          {renderUserIllustration()}
         </>
       );
     }
@@ -301,17 +299,17 @@ export function UserRegistrationFlow() {
       if (subStep === 1) {
         return (
           <>
-            <div className="flex-1 max-w-[520px] w-full pl-10">
+            <div className="flex-1 max-w-[520px] w-full md:pl-10">
               <button
                 onClick={goToPreviousSubStep}
-                className="inline-flex items-center gap-2 bg-transparent border-none text-base font-medium text-green-600 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700"
+                className="inline-flex items-center gap-2 bg-transparent border-none text-sm sm:text-base font-medium text-green-600 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 Back
               </button>
-              <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
                 Set your password
               </h1>
               <p className="text-base text-muted-foreground mb-7 leading-relaxed">
@@ -362,9 +360,7 @@ export function UserRegistrationFlow() {
                 </button>
               </form>
             </div>
-            <div className="flex items-center justify-center max-w-[400px]">
-              {renderLockIllustration()}
-            </div>
+            {renderLockIllustration()}
           </>
         );
       }
@@ -373,17 +369,17 @@ export function UserRegistrationFlow() {
       if (subStep === 2) {
         return (
           <>
-            <div className="flex-1 max-w-[520px] w-full pl-10">
+            <div className="flex-1 max-w-[520px] w-full md:pl-10">
               <button
                 onClick={goToPreviousSubStep}
-                className="inline-flex items-center gap-2 bg-transparent border-none text-base font-medium text-green-600 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700"
+                className="inline-flex items-center gap-2 bg-transparent border-none text-sm sm:text-base font-medium text-green-600 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 Back
               </button>
-              <h1 className="text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
                 Confirm your password
               </h1>
               <p className="text-base text-muted-foreground mb-7 leading-relaxed">
@@ -439,9 +435,7 @@ export function UserRegistrationFlow() {
                 </button>
               </form>
             </div>
-            <div className="flex items-center justify-center max-w-[400px]">
-              {renderLockIllustration()}
-            </div>
+            {renderLockIllustration()}
           </>
         );
       }
@@ -453,26 +447,26 @@ export function UserRegistrationFlow() {
   return (
     <div className="min-h-dvh bg-background flex flex-col font-sans overflow-x-hidden">
       {/* Header */}
-      <header className="flex justify-between items-center px-[60px] py-8 w-full shrink-0 relative">
-        <div className="flex items-center gap-12">
+      <header className="flex justify-between items-center px-5 sm:px-8 md:px-[60px] py-6 md:py-8 w-full shrink-0 relative">
+        <div className="flex items-center gap-4 sm:gap-8 md:gap-12">
           <Logo width={70} height={70} />
           {renderStepper()}
         </div>
         <button
           onClick={() => router.push(ROUTES.LOGIN)}
-          className="bg-transparent border-none text-base font-medium text-green-600 cursor-pointer transition-colors px-4 py-2 rounded-lg hover:text-green-700 hover:bg-green-50"
+          className="bg-transparent border-none text-sm sm:text-base font-medium text-green-600 cursor-pointer transition-colors px-3 sm:px-4 py-2 rounded-lg hover:text-green-700 hover:bg-green-50"
         >
           Log in
         </button>
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-1 px-[60px] pb-[60px] pt-5 gap-[60px] items-center justify-center w-full">
+      <main className="flex flex-1 px-5 sm:px-8 md:px-[60px] pb-8 md:pb-[60px] pt-5 gap-8 md:gap-[60px] items-center justify-center w-full flex-col md:flex-row">
         {renderStepContent()}
       </main>
 
       {/* Footer */}
-      <footer className="flex items-center justify-between px-[60px] py-4 shrink-0">
+      <footer className="flex items-center justify-between px-5 sm:px-8 md:px-[60px] py-4 shrink-0">
         <button className="bg-transparent border-none text-sm text-muted-foreground cursor-pointer hover:text-foreground">
           English
         </button>

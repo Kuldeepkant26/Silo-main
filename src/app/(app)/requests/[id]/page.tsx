@@ -15,7 +15,7 @@ export default async function RequestPage({ params }: RequestPageProps) {
   const { id } = await params;
 
   return (
-    <section className="flex flex-col space-y-6 px-8 py-4">
+    <section className="flex flex-col space-y-4 sm:space-y-6 px-4 sm:px-6 md:px-8 py-4">
       <Button className="w-fit" variant="link" asChild>
         <Link href={ROUTES.REQUESTS}>
           <Icons.arrowLeft className="h-4 w-4" />

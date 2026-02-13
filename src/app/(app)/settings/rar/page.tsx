@@ -36,18 +36,18 @@ export default function SettingsRequestsAndReviewsPage() {
   };
 
   return (
-    <section className="flex flex-col h-screen overflow-hidden p-10 pb-4">
+    <section className="flex flex-col h-screen overflow-hidden p-4 sm:p-6 md:p-10 pb-4">
       {/* Fixed upper section */}
       <div className="shrink-0">
-        <header className="flex items-end justify-between mb-8">
-          <div className="flex flex-col items-start gap-y-4">
+        <header className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex flex-col items-start gap-y-3 sm:gap-y-4">
             <BackButton
               className="!px-0 text-foreground hover:text-foreground/80"
               route={ROUTES.SETTINGS}
               label="back_to_settings"
             />
 
-            <h1 className="text-4xl font-bold text-foreground">{t("requests_and_reviews")}</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{t("requests_and_reviews")}</h1>
           </div>
         </header>
 

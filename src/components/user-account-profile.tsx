@@ -16,6 +16,7 @@ import { api } from "~/trpc/react";
 import { Icons } from "./icons";
 import { Spinner } from "./spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -37,6 +38,9 @@ import { Separator } from "./ui/separator";
 
 export function UserAccountProfile() {
   const { data: session } = authClient.useSession();
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    enabled: !!session?.session?.activeOrganizationId,
+  });
 
   const t = useTranslations();
 
@@ -153,7 +157,17 @@ export function UserAccountProfile() {
   return (
     <Card className="shadow-card">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl">{t("profile_information")}</CardTitle>
+        <div className="flex items-center gap-3">
+          <CardTitle className="text-xl">{t("profile_information")}</CardTitle>
+          {userRole?.role && (
+            <Badge
+              variant="outline"
+              className="text-[11px] font-semibold uppercase tracking-wider border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 px-2.5 py-0.5"
+            >
+              {userRole.role}
+            </Badge>
+          )}
+        </div>
         <CardDescription>
           {t("profile_information_description")}
         </CardDescription>

@@ -169,6 +169,67 @@
   }
 }
 
+/* ─── Theme Toggle: Circular Spread Animation (View Transition API) ───────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+  animation: theme-spread-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* When switching to dark mode, the old view should be on top initially */
+.dark::view-transition-old(root) {
+  z-index: 9999;
+  animation: theme-spread-out 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+  animation: none;
+}
+
+@keyframes theme-spread-in {
+  from {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+}
+
+@keyframes theme-spread-out {
+  from {
+    clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+  to {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+}
+
+/* Smooth transitions for all color changes */
+::view-transition-group(root) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Theme Toggle: Star twinkle animation ──────────────────────────────────── */
+@keyframes theme-star-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.theme-star {
+  animation: theme-star-twinkle 2s ease-in-out infinite;
+}
+
 /* "All caught up" animations */
 @keyframes fade-in-up {
   from {

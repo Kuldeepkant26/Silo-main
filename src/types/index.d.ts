@@ -2,6 +2,17 @@ import type { createTranslator, Messages } from "next-intl";
 
 import type { Icons } from "~/components/icons";
 
+// View Transition API type augmentation
+declare global {
+  interface Document {
+    startViewTransition?: (callback: () => void) => {
+      ready: Promise<void>;
+      finished: Promise<void>;
+      updateCallbackDone: Promise<void>;
+    };
+  }
+}
+
 export type SidebarNavItem = {
   title: string;
   href: string;

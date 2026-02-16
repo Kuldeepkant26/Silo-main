@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
@@ -10,6 +11,7 @@ import { env } from "~/env";
 import { ROUTES } from "~/constants/routes";
 import { authClient } from "~/server/auth/client";
 import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
 
 import { Icons } from "./icons";
 import { Spinner } from "./spinner";
@@ -86,7 +88,18 @@ interface Filters {
 
 export function RequestsList() {
   const t = useTranslations();
+  const router = useRouter();
   const { data: auth } = authClient.useSession();
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    retry: false,
+  });
+
+  // Redirect members to my-requests
+  useEffect(() => {
+    if (userRole?.isMember) {
+      router.replace(ROUTES.MY_REQUESTS);
+    }
+  }, [userRole, router]);
   
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);

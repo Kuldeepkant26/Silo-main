@@ -16,6 +16,7 @@ import {
 } from "~/components/ui/sheet";
 import {
   createChat,
+  CreateChatAIError,
   getChat,
   sendMessage as sendChatMessage,
   type ChatMessage as APIChatMessage,
@@ -205,7 +206,17 @@ export default function AgentPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem("silo-chat-sessions");
+      if (saved) {
+        const parsed = JSON.parse(saved) as Array<{ id: string; title: string; updatedAt: string }>;
+        return parsed.map((s) => ({ ...s, updatedAt: new Date(s.updatedAt) }));
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -223,6 +234,14 @@ export default function AgentPage() {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
 
+  // ─── Persist chat sessions to localStorage ────────────────────────
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("silo-chat-sessions", JSON.stringify(chatSessions));
+    } catch { /* ignore */ }
+  }, [chatSessions]);
+
   // ─── Auto-resize textarea ─────────────────────────────────────────
 
   useEffect(() => {
@@ -237,7 +256,7 @@ export default function AgentPage() {
 
   const pollForResponse = useCallback(
     async (chatId: string, knownMessageIds: Set<string>) => {
-      const maxAttempts = 90;
+      const maxAttempts = 15; // ~30 seconds
       let attempts = 0;
 
       while (attempts < maxAttempts) {
@@ -299,43 +318,59 @@ export default function AgentPage() {
       let chatId = activeChatId;
 
       if (!chatId) {
+        // ── First message: create chat room WITH initialMessage ──
         const title = text.length > 60 ? text.slice(0, 60) + "..." : text;
 
-        const chat = await createChat({
-          title,
-          initialMessage: text,
-          context: { legalTopic: "general", jurisdiction: "India" },
-        });
+        try {
+          const chat = await createChat({
+            title,
+            initialMessage: text,
+            context: { legalTopic: "contracts", jurisdiction: "India", documentType: "NDA" },
+          });
 
-        chatId = chat.id;
-        setActiveChatId(chatId);
-        setChatSessions((prev) => [
-          { id: chatId!, title, updatedAt: new Date() },
-          ...prev,
-        ]);
+          chatId = chat.id;
+          setActiveChatId(chatId);
+          setChatSessions((prev) => [
+            { id: chatId!, title, updatedAt: new Date() },
+            ...prev,
+          ]);
 
-        const knownIds = new Set<string>();
-        if (chat.messages) {
-          for (const m of chat.messages) {
-            knownIds.add(m.id);
-            if (m.role === "assistant") {
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: m.id,
-                  role: "assistant",
-                  content: m.content,
-                  timestamp: new Date(m.createdAt),
-                },
-              ]);
-              setIsLoading(false);
-              return;
+          // Check if the backend already returned an AI reply
+          const knownIds = new Set<string>();
+          if (chat.messages) {
+            for (const m of chat.messages) {
+              knownIds.add(m.id);
+              if (m.role === "assistant") {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: m.id,
+                    role: "assistant",
+                    content: m.content,
+                    timestamp: new Date(m.createdAt),
+                  },
+                ]);
+                setIsLoading(false);
+                return;
+              }
             }
           }
+          knownIds.add(userMsg.id);
+          // No AI reply yet – poll for it
+          void pollForResponse(chatId, knownIds);
+        } catch (createErr) {
+          if (createErr instanceof CreateChatAIError) {
+            // Chat was likely created but AI generation failed.
+            // We don't have the chatId, so stop loading and show a friendly message.
+            setIsLoading(false);
+            toast.error("AI is temporarily unavailable. Please try again in a moment.");
+            setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+            return;
+          }
+          throw createErr;
         }
-        knownIds.add(userMsg.id);
-        void pollForResponse(chatId, knownIds);
       } else {
+        // ── Follow-up message: send via messages endpoint ──
         let knownIds = new Set<string>();
         try {
           const existing = await getChat(chatId);
@@ -351,12 +386,13 @@ export default function AgentPage() {
 
         const resp = await sendChatMessage(chatId, { content: text });
 
+        // If the backend returned the AI reply directly, show it
         if (resp && "content" in resp && resp.content) {
           setMessages((prev) => [
             ...prev,
             {
               id: (resp as APIChatMessage).id ?? crypto.randomUUID(),
-              role: "assistant",
+              role: "assistant" as const,
               content: resp.content as string,
               timestamp: new Date(),
             },
@@ -365,6 +401,7 @@ export default function AgentPage() {
           return;
         }
 
+        // Otherwise poll for the AI reply
         void pollForResponse(chatId, knownIds);
       }
     } catch (err) {

@@ -44,7 +44,7 @@ function applyThemeToEl(el: HTMLElement, themeId: AgentThemeId | null, isAgentPa
   if (shouldApply) {
     el.setAttribute("data-agent-theme", themeId!);
     el.style.background = theme.vars["--at-bg"];
-    el.style.borderRight = `1px solid ${theme.vars["--at-border"]}`;
+    el.style.borderRight = "";
     el.style.color = theme.vars["--at-send-bg"];
     el.classList.remove("bg-white", "dark:bg-muted");
     // Set CSS custom properties on the element
@@ -113,7 +113,7 @@ export function ThemedSidebar({ children }: { children: ReactNode }) {
   return (
     <aside
       ref={asideRef}
-      className="hidden w-[280px] flex-col p-5 md:flex sticky top-0 h-screen overflow-y-auto flex-shrink-0 transition-colors duration-300 bg-white dark:bg-muted"
+      className="hidden w-[280px] flex-col p-5 md:flex sticky top-0 h-screen overflow-y-auto flex-shrink-0 transition-colors duration-300 bg-white dark:bg-muted border-r border-gray-200 dark:border-gray-700"
     >
       {children}
     </aside>

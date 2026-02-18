@@ -1078,8 +1078,6 @@ export default function AgentPage() {
       style={{
         ...(theme.vars as React.CSSProperties),
         background: "var(--at-bg)",
-        borderLeft: "1px solid var(--at-border)",
-        boxShadow: "inset 4px 0 16px color-mix(in srgb, var(--at-send-bg) 3%, transparent)",
       }}
     >
       {/* ── Top Bar ──────────────────────────────────────────────────── */}
@@ -1087,8 +1085,6 @@ export default function AgentPage() {
         className="flex h-[52px] shrink-0 items-center justify-between px-4 sm:px-6 backdrop-blur-sm"
         style={{
           background: "var(--at-topbar)",
-          borderBottom: "1px solid var(--at-border)",
-          boxShadow: "0 1px 0 var(--at-border), 0 2px 8px color-mix(in srgb, var(--at-send-bg) 4%, transparent)",
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -1325,8 +1321,6 @@ export default function AgentPage() {
         className="shrink-0 px-4 pb-5 pt-3 sm:px-6"
         style={{
           background: "var(--at-bg)",
-          borderTop: "2px solid var(--at-border)",
-          boxShadow: "0 -4px 24px -4px rgba(0,0,0,0.10), 0 -1px 0 var(--at-border)",
         }}
       >
         <div className="mx-auto w-full max-w-[720px]">
@@ -1338,7 +1332,8 @@ export default function AgentPage() {
               style={{
                 background: "var(--at-input-bg)",
                 border: "1.5px solid var(--at-border)",
-                boxShadow: "0 2px 0 0 var(--at-border), 0 4px 16px -4px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.12)",
+                borderRadius: "1.25rem",
+                boxShadow: "0 8px 32px -4px rgba(0,0,0,0.18), 0 2px 8px -2px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.18) inset, 0 -1px 0 rgba(0,0,0,0.06) inset",
               }}
             >
               <textarea

@@ -519,7 +519,7 @@ export function CreateRequest() {
                 name="summary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("summary")}*</FormLabel>
+                    <FormLabel>Title*</FormLabel>
 
                     <FormControl>
                       <Input

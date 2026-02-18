@@ -5,8 +5,9 @@ import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 import { api } from "~/trpc/react";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface Reviewer {
   id: string;
@@ -41,6 +42,7 @@ interface CategoriesListProps {
 export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
+  const authHeader = getSessionAuthHeader(auth);
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
@@ -91,7 +93,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -117,7 +119,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -155,7 +157,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": AUTH_TOKEN,
+          "Authorization": authHeader ?? "",
         },
         body: JSON.stringify({ categoryId, reviewerId }),
       });
@@ -225,7 +227,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": AUTH_TOKEN,
+          "Authorization": authHeader ?? "",
         },
         body: JSON.stringify(payload),
       });
@@ -258,7 +260,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         {
           method: "DELETE",
           headers: {
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );

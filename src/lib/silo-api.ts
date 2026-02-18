@@ -1,4 +1,5 @@
 import { env } from "~/env";
+import { getSessionAuthHeaderAsync } from "~/lib/api-auth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,11 +50,30 @@ export interface CreateChatPayload {
     legalTopic?: string;
     jurisdiction?: string;
     documentType?: string;
+    /** Current authenticated user details */
+    currentUser?: {
+      id: string;
+      name: string;
+      email: string;
+      organizationId?: string;
+    };
+    /** Summary of the user's requests / tickets */
+    userRequests?: Array<{
+      id: string;
+      title: string;
+      type: string;
+      priority: string | null;
+      workflowStatus: string | null;
+      category: string | null;
+      createdAt: string;
+    }>;
+    [key: string]: unknown;
   };
 }
 
 export interface SendMessagePayload {
   content: string;
+  attachments?: File[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,24 +102,66 @@ function normalizeChat(raw: ApiRawChat, rawMessages: ApiRawMessage[]): Chat {
 // ─── API Client ───────────────────────────────────────────────────────────────
 
 const API_BASE = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
+
+/**
+ * Resolve the Authorization header value.
+ * Prefers the current user's BetterAuth session token; falls back to the
+ * static env token only when no session is available (e.g. during SSR or
+ * unauthenticated contexts).
+ */
+async function resolveAuthHeader(): Promise<string> {
+  const sessionHeader = await getSessionAuthHeaderAsync();
+  if (sessionHeader) return sessionHeader;
+
+  // Fallback for edge-cases where session is not yet available
+  const fallback = env.NEXT_PUBLIC_API_AUTH_TOKEN;
+  return fallback.startsWith("Bearer ") ? fallback : `Bearer ${fallback}`;
+}
 
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
+  const authHeader = await resolveAuthHeader();
 
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: AUTH_TOKEN.startsWith("Bearer ")
-        ? AUTH_TOKEN
-        : `Bearer ${AUTH_TOKEN}`,
+      Authorization: authHeader,
       ...options.headers,
     },
   });
+
+  return handleApiResponse<T>(response);
+}
+
+/**
+ * Send a multipart/form-data request (used when attachments are included).
+ * The browser sets the Content-Type + boundary automatically when we pass FormData.
+ */
+async function formDataRequest<T>(
+  endpoint: string,
+  formData: FormData,
+  method = "POST",
+): Promise<T> {
+  const url = `${API_BASE}${endpoint}`;
+  const authHeader = await resolveAuthHeader();
+
+  const response = await fetch(url, {
+    method,
+    body: formData,
+    headers: {
+      Authorization: authHeader,
+      // Do NOT set Content-Type – the browser adds multipart boundary automatically
+    },
+  });
+
+  return handleApiResponse<T>(response);
+}
+
+async function handleApiResponse<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => "Unknown error");
@@ -199,18 +261,30 @@ export async function sendMessage(
   payload: SendMessagePayload,
 ): Promise<ChatMessage | Record<string, never>> {
   try {
-    const raw = await apiRequest<{
+    const hasAttachments = payload.attachments && payload.attachments.length > 0;
+
+    let raw: {
       userMessage?: ApiRawMessage;
       aiMessage?: ApiRawMessage;
       message?: ApiRawMessage;
       error?: string;
-    }>(
-      `/api/ai/chats/${chatId}/messages`,
-      {
+    };
+
+    if (hasAttachments) {
+      // Use FormData for multipart upload
+      const formData = new FormData();
+      formData.append("content", payload.content);
+      for (const file of payload.attachments!) {
+        formData.append("attachments", file);
+      }
+      raw = await formDataRequest(`/api/ai/chats/${chatId}/messages`, formData);
+    } else {
+      // Standard JSON request (no attachments)
+      raw = await apiRequest(`/api/ai/chats/${chatId}/messages`, {
         method: "POST",
-        body: JSON.stringify(payload),
-      },
-    );
+        body: JSON.stringify({ content: payload.content }),
+      });
+    }
 
     // The backend may return the AI reply in different shapes
     const aiRaw = raw.aiMessage ?? raw.message;

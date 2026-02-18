@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface Reviewer {
   id: string;
@@ -35,6 +36,7 @@ interface ExternalFormsListProps {
 export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
+  const authHeader = getSessionAuthHeader(auth);
   
   const [forms, setForms] = useState<RequestForm[]>([]);
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
@@ -66,7 +68,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -92,7 +94,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -130,7 +132,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": AUTH_TOKEN,
+          "Authorization": authHeader ?? "",
         },
         body: JSON.stringify({ formId, reviewerId }),
       });
@@ -163,7 +165,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
         {
           method: "DELETE",
           headers: {
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -284,21 +286,32 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                   </svg>
                 </button>
                 {openMenuId === form.id && (
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg min-w-[150px] z-10 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg min-w-[150px] z-10">
                     <button
                       className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
                       onClick={() => openDeleteModal(form.id, form.name)}
                     >
                       Delete
                     </button>
-                    {form.reviewerId && (
+                    <div className="relative">
                       <button
-                        className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-black dark:text-white cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        onClick={() => handleCopyLink(form)}
+                        className={`peer block w-full py-3 px-4 bg-transparent border-none text-left text-sm transition-colors ${
+                          form.reviewerId
+                            ? "text-black dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-neutral-400 dark:text-neutral-600 cursor-not-allowed"
+                        }`}
+                        onClick={() => form.reviewerId && handleCopyLink(form)}
+                        disabled={!form.reviewerId}
                       >
                         Copy link
                       </button>
-                    )}
+                      {!form.reviewerId && (
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 invisible peer-hover:visible flex items-center whitespace-nowrap rounded-md bg-neutral-900 dark:bg-neutral-100 px-2.5 py-1.5 text-xs text-white dark:text-neutral-900 shadow-md z-[9999]">
+                          Assign reviewer before copying
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

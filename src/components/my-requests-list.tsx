@@ -34,8 +34,9 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 // Types based on API response
 interface RequestForm {
@@ -102,6 +103,7 @@ export function MyRequestsList() {
   const organizationId = auth?.session?.activeOrganizationId;
   const userEmail = auth?.user?.email;
   const userId = auth?.user?.id;
+  const authHeader = getSessionAuthHeader(auth);
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ export function MyRequestsList() {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );

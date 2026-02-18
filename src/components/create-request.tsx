@@ -52,8 +52,9 @@ import {
 import { Textarea } from "./ui/textarea";
 import { z as zod } from "zod";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 // Initialize Supabase client for file uploads (client-side only)
 const supabase = createClient(
@@ -82,29 +83,7 @@ const internalRequestSchema = zod
     categoryId: zod.string().min(1, { message: "Category is required" }),
     summary: zod.string().min(1, { message: "Summary is required" }),
     description: zod.string().min(1, { message: "Description is required" }),
-    startDate: zod
-      .date({
-        invalid_type_error: "Start date must be a valid date.",
-      })
-      .optional(),
-    endDate: zod
-      .date({
-        invalid_type_error: "End date must be a valid date.",
-      })
-      .optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.endDate > data.startDate;
-      }
-      return true;
-    },
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    },
-  );
+  });
 
 export function CreateRequest() {
   const t = useTranslations();
@@ -112,10 +91,10 @@ export function CreateRequest() {
   const organizationId = auth?.session?.activeOrganizationId;
   const userName = auth?.user?.name || "";
   const userEmail = auth?.user?.email || "";
+  const authHeader = getSessionAuthHeader(auth);
 
   const [showDialog, setShowDialog] = useState(false);
-  const [showStartDateCalendar, setShowStartDateCalendar] = useState(false);
-  const [showEndDateCalendar, setShowEndDateCalendar] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -168,7 +147,7 @@ export function CreateRequest() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -352,8 +331,6 @@ export function CreateRequest() {
         categoryId: data.categoryId,
         summary: data.summary,
         description: data.description,
-        startDate: data.startDate ? format(data.startDate, "yyyy-MM-dd") : undefined,
-        endDate: data.endDate ? format(data.endDate, "yyyy-MM-dd") : undefined,
         attachments: successfulUploads.map((uploadedFile) => ({
           Key: uploadedFile.key,
           Id: uploadedFile.id,
@@ -366,7 +343,7 @@ export function CreateRequest() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
           body: JSON.stringify(payload),
         }
@@ -380,8 +357,6 @@ export function CreateRequest() {
       const result = await response.json();
 
       setShowDialog(false);
-      setShowStartDateCalendar(false);
-      setShowEndDateCalendar(false);
       form.reset({
         name: userName,
         email: userEmail,
@@ -652,104 +627,6 @@ export function CreateRequest() {
                     </FormDescription>
 
                     <FormMessage className="-mt-2" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Start date</FormLabel>
-
-                    <Popover
-                      open={showStartDateCalendar}
-                      onOpenChange={setShowStartDateCalendar}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button className="border-input" variant="outline">
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                e.g. {format(today, "PPP")}
-                              </span>
-                            )}
-                            <Icons.calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          id="startDate"
-                          mode="single"
-                          defaultMonth={field.value}
-                          selected={field.value}
-                          onSelect={(e) => {
-                            field.onChange(e);
-                            setShowStartDateCalendar(false);
-                          }}
-                          disabled={(date) => date < today}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      This will be the displayed request start date
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>End date</FormLabel>
-
-                    <Popover
-                      open={showEndDateCalendar}
-                      onOpenChange={setShowEndDateCalendar}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button className="border-input" variant="outline">
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                e.g. {format(today, "PPP")}
-                              </span>
-                            )}
-                            <Icons.calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          id="endDate"
-                          mode="single"
-                          selected={field.value}
-                          defaultMonth={
-                            form.getValues("startDate") ?? field.value
-                          }
-                          onSelect={(e) => {
-                            field.onChange(e);
-                            setShowEndDateCalendar(false);
-                          }}
-                          disabled={(date) =>
-                            date < (form.getValues("startDate") ?? today)
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      This will be the displayed request end date
-                    </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

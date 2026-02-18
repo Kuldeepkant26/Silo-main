@@ -34,8 +34,9 @@ import { ReviewDetailPanel } from "./review-detail-panel";
 import { ReviewBulkEditModal } from "./review-bulk-edit-modal";
 import { ReviewEditModal } from "./review-edit-modal";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 // Types based on API response
 interface RequestForm {
@@ -90,6 +91,7 @@ export function ReviewList() {
   const organizationId = auth?.session?.activeOrganizationId;
   const userEmail = auth?.user?.email;
   const userId = auth?.user?.id;
+  const authHeader = getSessionAuthHeader(auth);
 
   // Check if current user is admin/owner
   const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
@@ -126,7 +128,7 @@ export function ReviewList() {
 
   // Fetch all tickets for review using current user's ID
   const fetchTickets = useCallback(async () => {
-    if (!userId) {
+    if (!userId || !organizationId) {
       setLoading(false);
       return;
     }
@@ -136,11 +138,11 @@ export function ReviewList() {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/internal/get-all-requests/${userId}/false`,
+        `${API_BASE_URL}/api/get-all-tickets?user_id=${userId}&organization_id=${organizationId}`,
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );
@@ -159,14 +161,12 @@ export function ReviewList() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, organizationId]);
 
   // Fetch tickets on mount
   useEffect(() => {
-    if (userId) {
-      fetchTickets();
-    }
-  }, [userId, fetchTickets]);
+    fetchTickets();
+  }, [fetchTickets]);
 
   // Transform tickets to ReviewItem format for table display
   const reviewItems: ReviewItem[] = useMemo(() => {

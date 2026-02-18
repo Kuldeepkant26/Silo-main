@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createClient } from "@supabase/supabase-js";
 
+import { authClient } from "~/server/auth/client";
+import { getSessionAuthHeader } from "~/lib/api-auth";
 import { Icons } from "./icons";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -21,7 +23,6 @@ import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://silo-be.vercel.app";
-const API_AUTH_TOKEN = process.env.NEXT_PUBLIC_API_AUTH_TOKEN ?? "BYULcaacpa9VDX2YvrKlxukCUuHJW9zA";
 
 // Create Supabase client for storage operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -88,6 +89,8 @@ const getStatusColor = (status: string) => {
 export function RequestDetails({ id }: RequestDetailsProps) {
   const router = useRouter();
   const t = useTranslations();
+  const { data: auth } = authClient.useSession();
+  const authHeader = getSessionAuthHeader(auth);
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +103,7 @@ export function RequestDetails({ id }: RequestDetailsProps) {
         const response = await fetch(`${API_BASE_URL}/api/get-ticket-detail/${id}`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${API_AUTH_TOKEN}`,
+            Authorization: authHeader ?? "",
             "Content-Type": "application/json",
           },
         });

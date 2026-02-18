@@ -35,8 +35,9 @@ import {
 } from "./ui/table";
 import { Skeleton } from "./ui/skeleton";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface Ticket {
   id: number;
@@ -90,6 +91,7 @@ export function RequestsList() {
   const t = useTranslations();
   const router = useRouter();
   const { data: auth } = authClient.useSession();
+  const authHeader = getSessionAuthHeader(auth);
   const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
     retry: false,
   });
@@ -128,7 +130,7 @@ export function RequestsList() {
         `${API_BASE_URL}/api/get-all-tickets?user_id=${userId}&organization_id=${organizationId}`,
         {
           headers: {
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
         }
       );

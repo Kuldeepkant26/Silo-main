@@ -5,8 +5,9 @@ import { authClient } from "~/server/auth/client";
 import { api } from "~/trpc/react";
 import { env } from "~/env";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface CategoryModalProps {
 export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryModalProps) {
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
+  const authHeader = getSessionAuthHeader(auth);
   
   // Fetch teams using tRPC (same as Teams tab)
   const { data: teams, isLoading: teamsLoading } = api.team.getAllByOrganization.useQuery(
@@ -46,7 +48,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": AUTH_TOKEN,
+          "Authorization": authHeader ?? "",
         },
         body: JSON.stringify({
           name: name.trim(),

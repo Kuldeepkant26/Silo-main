@@ -33,8 +33,9 @@ import {
 import { Skeleton } from "./ui/skeleton";
 import { Input } from "./ui/input";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface ReviewDetailPanelProps {
   review: {
@@ -171,6 +172,7 @@ export function ReviewDetailPanel({
   const { data: auth } = authClient.useSession();
   const userId = auth?.user?.id;
   const userEmail = auth?.user?.email;
+  const authHeader = getSessionAuthHeader(auth);
   
   const [activeTab, setActiveTab] = useState<"details" | "chat">(
     "details"
@@ -211,7 +213,7 @@ export function ReviewDetailPanel({
           {
             headers: {
               "Content-Type": "application/json",
-              "Authorization": AUTH_TOKEN,
+              "Authorization": authHeader ?? "",
             },
           }
         );
@@ -290,7 +292,7 @@ export function ReviewDetailPanel({
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": AUTH_TOKEN,
+              "Authorization": authHeader ?? "",
             },
           }
         );
@@ -404,7 +406,7 @@ export function ReviewDetailPanel({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
           body: JSON.stringify({
             user_id: userId,
@@ -782,7 +784,7 @@ export function ReviewDetailPanel({
                         method: "GET",
                         headers: {
                           "Content-Type": "application/json",
-                          "Authorization": AUTH_TOKEN,
+                          "Authorization": authHeader ?? "",
                         },
                       }
                     );

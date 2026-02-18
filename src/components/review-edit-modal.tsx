@@ -21,8 +21,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface ReviewEditModalProps {
   open: boolean;
@@ -47,6 +48,7 @@ export function ReviewEditModal({
   const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
+  const authHeader = getSessionAuthHeader(auth);
 
   const [legalOwners, setLegalOwners] = useState<LegalOwner[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,7 +83,7 @@ export function ReviewEditModal({
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": AUTH_TOKEN,
+              "Authorization": authHeader ?? "",
             },
           }
         );
@@ -122,7 +124,7 @@ export function ReviewEditModal({
           {
             headers: {
               "Content-Type": "application/json",
-              "Authorization": AUTH_TOKEN,
+              "Authorization": authHeader ?? "",
             },
           }
         );
@@ -198,7 +200,7 @@ export function ReviewEditModal({
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": AUTH_TOKEN,
+            "Authorization": authHeader ?? "",
           },
           body: JSON.stringify(payload),
         }

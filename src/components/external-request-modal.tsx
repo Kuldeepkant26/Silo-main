@@ -4,8 +4,9 @@ import { useState } from "react";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 
+import { getSessionAuthHeader } from "~/lib/api-auth";
+
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
-const AUTH_TOKEN = env.NEXT_PUBLIC_API_AUTH_TOKEN;
 
 interface ExternalRequestModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ExternalRequestModalProps {
 export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: ExternalRequestModalProps) {
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
+  const authHeader = getSessionAuthHeader(auth);
   
   const [title, setTitle] = useState("");
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
@@ -38,7 +40,7 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": AUTH_TOKEN,
+          "Authorization": authHeader ?? "",
         },
         body: JSON.stringify({
           name: title,

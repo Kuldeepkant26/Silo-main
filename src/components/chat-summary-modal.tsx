@@ -157,7 +157,7 @@ export function ChatSummaryModal({
   const editorRef = useRef<HTMLDivElement>(null);
   const refinementRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /* ── undo / redo history ────────────────────────────────────────────────── */
   const undoStack = useRef<string[]>([]);

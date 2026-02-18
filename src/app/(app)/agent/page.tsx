@@ -11,6 +11,7 @@ import SpeechRecognition, {
 
 import { Icons } from "~/components/icons";
 import { ChatSummaryModal } from "~/components/chat-summary-modal";
+import { PrepareDocModal } from "~/components/prepare-doc-modal";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
 import { getSessionAuthHeader } from "~/lib/api-auth";
@@ -537,6 +538,7 @@ export default function AgentPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [prepareDocOpen, setPrepareDocOpen] = useState(false);
   const [advanceOpen, setAdvanceOpen] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [userTickets, setUserTickets] = useState<
@@ -930,7 +932,17 @@ export default function AgentPage() {
           throw createErr;
         }
       } else {
-        // ── Follow-up message: send via messages endpoint ──
+        // ── Follow-up message (or first message in a pre-created chat) ──
+        // If the chat was pre-created with a placeholder title, update it now
+        const title = text.length > 60 ? text.slice(0, 60) + "..." : text;
+        setChatSessions((prev) =>
+          prev.map((s) =>
+            s.id === chatId && s.title === "New Chat"
+              ? { ...s, title, updatedAt: new Date() }
+              : s,
+          ),
+        );
+
         let knownIds = new Set<string>();
         try {
           const existing = await getChat(chatId);
@@ -996,10 +1008,48 @@ export default function AgentPage() {
   };
 
   const startNewChat = () => {
+    // Reset UI immediately so it's responsive
     setActiveChatId(null);
     setMessages([]);
     setHistoryOpen(false);
     setTimeout(() => inputRef.current?.focus(), 100);
+
+    // Pre-create the chat in the background with an empty initialMessage.
+    // This means when the user sends their first real message it will go
+    // through the reliable sendMessage() path instead of the heavier
+    // createChat() path (which creates + calls AI in one shot and can fail).
+    void (async () => {
+      try {
+        const chat = await createChat({
+          title: "New Chat",
+          initialMessage: "",
+          context: {
+            ...(currentUser
+              ? {
+                  currentUser: {
+                    id: currentUser.id,
+                    name: currentUser.name ?? "",
+                    email: currentUser.email ?? "",
+                    organizationId: organizationId ?? undefined,
+                  },
+                }
+              : {}),
+            ...(userTickets.length > 0
+              ? { userRequests: userTickets }
+              : {}),
+          },
+        });
+        if (chat?.id) {
+          setActiveChatId(chat.id);
+          setChatSessions((prev) => [
+            { id: chat.id, title: "New Chat", updatedAt: new Date() },
+            ...prev.filter((s) => s.id !== chat.id),
+          ]);
+        }
+      } catch {
+        // Silently ignore – the first send will fall back to createChat normally
+      }
+    })();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1147,12 +1197,14 @@ export default function AgentPage() {
                   </svg>
                   Summary
                 </button>
-                {/* Prepare doc option (disabled) */}
+                {/* Prepare doc option */}
                 <button
                   type="button"
-                  disabled
-                  className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium opacity-30 cursor-not-allowed"
+                  onClick={() => { setPrepareDocOpen(true); setAdvanceOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition-colors"
                   style={{ color: "var(--at-muted)", background: "transparent" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--at-accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 4h16v16H4z" />
@@ -1461,7 +1513,16 @@ export default function AgentPage() {
         onClose={() => setSummaryOpen(false)}
         messages={messages.map((m) => ({ role: m.role, content: m.content }))}
         themeVars={theme.vars}
-        chatId={activeChatId}
+        chatId={activeChatId ?? undefined}
+      />
+
+      {/* Prepare Doc Modal */}
+      <PrepareDocModal
+        open={prepareDocOpen}
+        onClose={() => setPrepareDocOpen(false)}
+        messages={messages.map((m) => ({ role: m.role, content: m.content }))}
+        themeVars={theme.vars}
+        chatId={activeChatId ?? undefined}
       />
 
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>

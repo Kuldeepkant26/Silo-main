@@ -10,6 +10,7 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 
 import { Icons } from "~/components/icons";
+import { ChatSummaryModal } from "~/components/chat-summary-modal";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
 import { getSessionAuthHeader } from "~/lib/api-auth";
@@ -535,6 +536,8 @@ export default function AgentPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [advanceOpen, setAdvanceOpen] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [userTickets, setUserTickets] = useState<
     Array<{
@@ -575,12 +578,37 @@ export default function AgentPage() {
   } = useSpeechRecognition();
 
   // Sync live transcript into the input field while listening.
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (listening && transcript && transcript !== prevTranscriptRef.current) {
       setInput(transcript);
+      // Reset the silence timer whenever new speech is detected
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(() => {
+        SpeechRecognition.stopListening();
+      }, 3000);
     }
     prevTranscriptRef.current = transcript;
   }, [transcript, listening]);
+
+  // Start a silence timer when listening begins (in case user never speaks)
+  useEffect(() => {
+    if (listening) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(() => {
+        SpeechRecognition.stopListening();
+      }, 3000);
+    } else {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    };
+  }, [listening]);
 
   const toggleVoiceInput = useCallback(() => {
     if (!browserSupportsSpeechRecognition) {
@@ -1062,6 +1090,83 @@ export default function AgentPage() {
             <span className="hidden sm:inline">History</span>
           </button>
 
+          {/* Advance Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setAdvanceOpen(true)}
+            onMouseLeave={() => setAdvanceOpen(false)}
+          >
+            <button
+              type="button"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-all active:scale-[0.97]"
+              style={{
+                border: "1px solid var(--at-border)",
+                color: "var(--at-muted)",
+                background: advanceOpen ? "var(--at-accent)" : "transparent",
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>
+              <span className="hidden sm:inline">Advance</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {advanceOpen && (
+              <div
+                className="absolute right-0 top-full z-50 min-w-[140px]"
+                style={{ paddingTop: "4px" }}
+              >
+              <div
+                className="rounded-lg overflow-hidden py-1"
+                style={{
+                  border: "1px solid var(--at-border)",
+                  background: "var(--at-bg)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                }}
+              >
+                {/* Summary option */}
+                <button
+                  type="button"
+                  disabled={messages.length === 0}
+                  onClick={() => { setSummaryOpen(true); setAdvanceOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  style={{ color: "var(--at-muted)", background: "transparent" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--at-accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  Summary
+                </button>
+                {/* Prepare doc option (disabled) */}
+                <button
+                  type="button"
+                  disabled
+                  className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium opacity-30 cursor-not-allowed"
+                  style={{ color: "var(--at-muted)", background: "transparent" }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16v16H4z" />
+                    <line x1="8" y1="9" x2="16" y2="9" />
+                    <line x1="8" y1="13" x2="16" y2="13" />
+                    <line x1="8" y1="17" x2="12" y2="17" />
+                  </svg>
+                  Prepare doc
+                </button>
+              </div>
+              </div>
+            )}
+          </div>
+
           {/* Theme Picker */}
           <ThemePicker current={themeId} onChange={handleThemeChange} />
         </div>
@@ -1279,33 +1384,44 @@ export default function AgentPage() {
                   </button>
 
                   {/* Voice */}
-                  <button
-                    type="button"
-                    onClick={toggleVoiceInput}
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-lg transition-all",
-                      listening && "animate-pulse",
+                  <div className="relative flex items-center justify-center">
+                    {/* Animated pulse rings when listening */}
+                    {listening && (
+                      <>
+                        <span className="absolute inset-0 rounded-lg animate-ping" style={{ background: "rgba(239,68,68,0.25)" }} />
+                        <span className="absolute inset-[-3px] rounded-lg animate-pulse" style={{ border: "2px solid rgba(239,68,68,0.4)" }} />
+                      </>
                     )}
-                    style={{ color: listening ? "var(--at-send-bg)" : "var(--at-muted)", background: listening ? "var(--at-accent)" : "transparent" }}
-                    title={listening ? "Stop listening" : "Voice input"}
-                  >
-                    {listening ? (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                        <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-                        <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17" />
-                        <line x1="12" y1="19" x2="12" y2="23" />
-                        <line x1="8" y1="23" x2="16" y2="23" />
-                      </svg>
-                    ) : (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                        <line x1="12" y1="19" x2="12" y2="23" />
-                        <line x1="8" y1="23" x2="16" y2="23" />
-                      </svg>
-                    )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      className={cn(
+                        "relative z-10 flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
+                      )}
+                      style={{
+                        color: listening ? "#ffffff" : "var(--at-muted)",
+                        background: listening ? "#ef4444" : "transparent",
+                        boxShadow: listening ? "0 0 12px rgba(239,68,68,0.5), 0 0 4px rgba(239,68,68,0.3)" : "none",
+                      }}
+                      title={listening ? "Stop listening (auto-stops after 3s of silence)" : "Voice input"}
+                    >
+                      {listening ? (
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" y1="19" x2="12" y2="23" />
+                          <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" y1="19" x2="12" y2="23" />
+                          <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Send */}
@@ -1339,6 +1455,15 @@ export default function AgentPage() {
       </div>
 
       {/* ── Chat History Sheet ───────────────────────────────────────── */}
+      {/* Summary Modal */}
+      <ChatSummaryModal
+        open={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        messages={messages.map((m) => ({ role: m.role, content: m.content }))}
+        themeVars={theme.vars}
+        chatId={activeChatId}
+      />
+
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
         <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0" style={{ ...(theme.vars as React.CSSProperties), background: theme.vars["--at-bg"], borderLeft: `1px solid ${theme.vars["--at-border"]}`, color: theme.vars["--at-send-bg"] }}>
           <SheetHeader className="px-5 py-4" style={{ borderBottom: "1px solid var(--at-border)" }}>

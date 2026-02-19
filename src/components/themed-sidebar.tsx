@@ -59,6 +59,9 @@ function applyThemeToEl(el: HTMLElement, themeId: AgentThemeId | null, isAgentPa
     if (!el.classList.contains("bg-white")) {
       el.classList.add("bg-white");
     }
+    if (!el.classList.contains("dark:bg-muted")) {
+      el.classList.add("dark:bg-muted");
+    }
     // Remove CSS custom properties
     for (const key of Object.keys(AGENT_THEMES[0]!.vars)) {
       el.style.removeProperty(key);

@@ -138,7 +138,7 @@ export function ReviewList() {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/get-all-tickets?user_id=${userId}&organization_id=${organizationId}`,
+        `${API_BASE_URL}/api/get-all-tickets-review?user_id=${userId}&organization_id=${organizationId}`,
         {
           headers: {
             "Content-Type": "application/json",

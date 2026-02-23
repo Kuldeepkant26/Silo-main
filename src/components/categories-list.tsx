@@ -256,7 +256,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
     setIsDeleting(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/internal/delete-category/${deleteModal.categoryId}/${organizationId}`,
+        `${API_BASE_URL}/api/internal/delete-category/${deleteModal.categoryId}`,
         {
           method: "DELETE",
           headers: {

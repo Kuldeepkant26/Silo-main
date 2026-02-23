@@ -137,14 +137,14 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
                 className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 font-[system-ui] bg-background cursor-pointer appearance-none pr-10 hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
                 value={assignedTeamId}
                 onChange={(e) => setAssignedTeamId(e.target.value)}
-                disabled={teamsLoading || (!teamsLoading && (teams ?? []).length === 0)}
+                disabled={teamsLoading}
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "right 16px center",
                 }}
               >
-                <option value="">{!teamsLoading && (teams ?? []).length === 0 ? "No Teams" : "Select a team"}</option>
+                <option value="">Available to Everyone</option>
                 {(teams ?? []).map((team) => (
                   <option key={team.id} value={team.id}>
                     {team.name}
@@ -160,11 +160,6 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
                 </div>
               )}
             </div>
-            {!teamsLoading && (teams ?? []).length === 0 && (
-              <p className="text-sm text-amber-600 mt-2">
-                Please create a Team before creating a category
-              </p>
-            )}
           </div>
 
           <p className="text-sm text-[#6b7280] leading-relaxed mb-6">
@@ -219,7 +214,7 @@ export function CategoryModal({ isOpen, onClose, onCategoryCreated }: CategoryMo
             <button
               className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-primary bg-primary text-primary-foreground uppercase hover:bg-primary/90 hover:border-primary/90 active:bg-primary active:transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
-              disabled={!name.trim() || isLoading || (!teamsLoading && (teams ?? []).length === 0)}
+              disabled={!name.trim() || isLoading}
             >
               {isLoading ? "SAVING..." : "SAVE"}
             </button>

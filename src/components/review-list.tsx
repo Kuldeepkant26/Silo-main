@@ -81,6 +81,14 @@ interface ReviewItem {
   urgency: "LOW" | "HIGH" | "MID" | null;
   workflowStatus: "OPEN" | "IN_PROGRESS" | "DONE" | "OVERDUE" | "REOPEN" | null;
   category: string | null;
+  legalOwnerId: string | null;
+}
+
+interface Reviewer {
+  id: string;
+  email: string;
+  name: string;
+  image: string | null;
 }
 
 type SortOrder = "newest" | "oldest";
@@ -100,6 +108,7 @@ export function ReviewList() {
 
   // State for API data
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,12 +122,14 @@ export function ReviewList() {
     category: string;
     sourceType: string;
     reviewed: string;
+    reviewer: string;
   }>({
     priority: "",
     status: "",
     category: "",
     sourceType: "",
     reviewed: "",
+    reviewer: "",
   });
   const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
@@ -163,10 +174,35 @@ export function ReviewList() {
     }
   }, [userId, organizationId]);
 
-  // Fetch tickets on mount
+  // Fetch reviewers
+  const fetchReviewers = useCallback(async () => {
+    if (!organizationId) return;
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/public/form/reviewers/${organizationId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": authHeader ?? "",
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setReviewers(data.reviewers || []);
+      }
+    } catch (error) {
+      console.error("Error fetching reviewers:", error);
+    }
+  }, [organizationId]);
+
+  // Fetch tickets and reviewers on mount
   useEffect(() => {
     fetchTickets();
-  }, [fetchTickets]);
+    fetchReviewers();
+  }, [fetchTickets, fetchReviewers]);
 
   // Transform tickets to ReviewItem format for table display
   const reviewItems: ReviewItem[] = useMemo(() => {
@@ -185,6 +221,7 @@ export function ReviewList() {
       urgency: ticket.priority,
       workflowStatus: ticket.workflowStatus,
       category: ticket.category?.name || null,
+      legalOwnerId: ticket.legalOwnerId,
     }));
   }, [tickets]);
 
@@ -195,6 +232,19 @@ export function ReviewList() {
       .filter((c): c is string => !!c);
     return [...new Set(categories)];
   }, [tickets]);
+
+  // Get unique reviewer IDs from tickets
+  const uniqueReviewerIds = useMemo(() => {
+    const reviewerIds = tickets
+      .map((t) => t.legalOwnerId)
+      .filter((id): id is string => !!id);
+    return [...new Set(reviewerIds)];
+  }, [tickets]);
+
+  // Filter reviewers to only show those who have tickets assigned
+  const activeReviewers = useMemo(() => {
+    return reviewers.filter((reviewer) => uniqueReviewerIds.includes(reviewer.id));
+  }, [reviewers, uniqueReviewerIds]);
 
   const pendingCount = tickets.length;
 
@@ -238,6 +288,11 @@ export function ReviewList() {
     if (selectedFilters.reviewed) {
       const isReviewed = selectedFilters.reviewed === "true";
       items = items.filter((item) => item.reviewed === isReviewed);
+    }
+
+    // Apply reviewer filter
+    if (selectedFilters.reviewer) {
+      items = items.filter((item) => item.legalOwnerId === selectedFilters.reviewer);
     }
 
     // Apply sort
@@ -479,12 +534,32 @@ export function ReviewList() {
             </SelectContent>
           </Select>
 
+          {/* Reviewer Filter */}
+          {activeReviewers.length > 0 && (
+            <Select 
+              value={selectedFilters.reviewer} 
+              onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewer: value === "all" ? "" : value }))}
+            >
+              <SelectTrigger className="w-[150px] rounded-full border-[#ccc]">
+                <SelectValue placeholder="Reviewer" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Reviewers</SelectItem>
+                {activeReviewers.map((reviewer) => (
+                  <SelectItem key={reviewer.id} value={reviewer.id}>
+                    {reviewer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           {/* Clear Filters Button */}
-          {(selectedFilters.priority || selectedFilters.status || selectedFilters.category || selectedFilters.sourceType || selectedFilters.reviewed) && (
+          {(selectedFilters.priority || selectedFilters.status || selectedFilters.category || selectedFilters.sourceType || selectedFilters.reviewed || selectedFilters.reviewer) && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedFilters({ priority: "", status: "", category: "", sourceType: "", reviewed: "" })}
+              onClick={() => setSelectedFilters({ priority: "", status: "", category: "", sourceType: "", reviewed: "", reviewer: "" })}
               className="text-muted-foreground hover:text-foreground"
             >
               <Icons.close className="h-4 w-4 mr-1" />

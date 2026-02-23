@@ -617,7 +617,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                       backgroundPosition: "right 16px center",
                     }}
                   >
-                    <option value="">{teamsLoading ? "Loading..." : "No team assigned"}</option>
+                    <option value="">Available to Everyone</option>
                     {(teams ?? []).map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}

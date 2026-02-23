@@ -198,6 +198,11 @@ export function ReviewDetailPanel({
   const [chatUploading, setChatUploading] = useState(false);
   const [detailedReview, setDetailedReview] = useState<DetailedReview | null>(null);
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
+
+  // Ticket-based AI suggestion state (shown on Details tab)
+  const [detailSuggestions, setDetailSuggestions] = useState<string[]>([]);
+  const [loadingDetailSuggestions, setLoadingDetailSuggestions] = useState(false);
+  const [sendingSuggestion, setSendingSuggestion] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -273,6 +278,105 @@ export function ReviewDetailPanel({
 
     fetchAttachmentUrls();
   }, [detailedReview]);
+
+  // Fetch ticket-based AI suggestions when details load
+  useEffect(() => {
+    const fetchDetailSuggestions = async () => {
+      if (!detailedReview) return;
+      setLoadingDetailSuggestions(true);
+      try {
+        const response = await fetch('/api/agent/ticket-suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticket: {
+              id: detailedReview.id,
+              title: review.title,
+              email: review.email,
+              type: review.type,
+              description: detailedReview.description,
+              workflowStatus: detailedReview.workflowStatus || review.workflowStatus,
+              priority: detailedReview.priority || review.urgency,
+              category: review.category,
+              reviewed: review.reviewed,
+            },
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDetailSuggestions(data.suggestions || []);
+        }
+      } catch (error) {
+        console.error('Error fetching detail suggestions:', error);
+      } finally {
+        setLoadingDetailSuggestions(false);
+      }
+    };
+
+    fetchDetailSuggestions();
+  }, [detailedReview]);
+
+  // Handle sending a suggestion from the Details tab: send message + switch to Chat
+  const handleSendSuggestion = async (suggestion: string, index: number) => {
+    if (!userId || !userEmail || sendingSuggestion !== null) return;
+    setSendingSuggestion(index);
+
+    const tempId = Date.now();
+    const tempMessage: ChatMessage = {
+      id: tempId,
+      message: suggestion,
+      attachments: [],
+      senderType: "ADMIN",
+      senderEmail: userEmail,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add message optimistically
+    setMessages(prev => [...prev, tempMessage]);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/ticket-message/${review.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": authHeader ?? "",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            email: userEmail,
+            message: suggestion,
+            attachments: [],
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.message || data.id) {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === tempId
+                ? { ...msg, id: data.id || data.message?.id || tempId }
+                : msg
+            )
+          );
+        }
+        // Switch to Chat tab after successful send
+        setActiveTab("chat");
+      } else {
+        // Rollback on failure
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        console.error("Failed to send suggestion message");
+      }
+    } catch (error) {
+      console.error("Error sending suggestion message:", error);
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+    } finally {
+      setSendingSuggestion(null);
+    }
+  };
 
   // Fetch chat messages
   useEffect(() => {
@@ -763,6 +867,113 @@ export function ReviewDetailPanel({
                 </div>
               </div>
             )}
+
+            {/* AI Suggested Messages */}
+            <div>
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <div className="p-1 rounded-md bg-primary shadow-sm">
+                    <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                  </div>
+                  AI Suggested Messages
+                </label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                  disabled={loadingDetailSuggestions}
+                  onClick={async () => {
+                    if (!detailedReview) return;
+                    setLoadingDetailSuggestions(true);
+                    try {
+                      const response = await fetch('/api/agent/ticket-suggestions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          ticket: {
+                            id: detailedReview.id,
+                            title: review.title,
+                            email: review.email,
+                            type: review.type,
+                            description: detailedReview.description,
+                            workflowStatus: detailedReview.workflowStatus || review.workflowStatus,
+                            priority: detailedReview.priority || review.urgency,
+                            category: review.category,
+                            reviewed: review.reviewed,
+                          },
+                        }),
+                      });
+                      if (response.ok) {
+                        const data = await response.json();
+                        setDetailSuggestions(data.suggestions || []);
+                      }
+                    } catch (error) {
+                      console.error('Error refreshing detail suggestions:', error);
+                    } finally {
+                      setLoadingDetailSuggestions(false);
+                    }
+                  }}
+                >
+                  <RefreshCw className={cn("h-3 w-3 mr-1", loadingDetailSuggestions && "animate-spin")} />
+                  Refresh
+                </Button>
+              </div>
+
+              {loadingDetailSuggestions ? (
+                <div className="space-y-2.5">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-14 rounded-xl bg-muted/50 dark:bg-muted/30 animate-pulse border border-border/50"
+                    />
+                  ))}
+                </div>
+              ) : detailSuggestions.length > 0 ? (
+                <div className="space-y-2">
+                  {detailSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSendSuggestion(suggestion, index)}
+                      disabled={sendingSuggestion !== null}
+                      className={cn(
+                        "w-full text-left p-3 rounded-xl border transition-all duration-200 group",
+                        "bg-background dark:bg-muted/40 border-border",
+                        "hover:border-primary/50 hover:bg-accent hover:shadow-md",
+                        sendingSuggestion === index && "border-primary bg-primary/5 opacity-80",
+                        sendingSuggestion !== null && sendingSuggestion !== index && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className={cn(
+                          "mt-0.5 p-1 rounded-md shrink-0 transition-colors",
+                          sendingSuggestion === index
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted dark:bg-muted/60 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                        )}>
+                          {sendingSuggestion === index ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Send className="h-3 w-3" />
+                          )}
+                        </div>
+                        <p className="text-xs text-foreground/80 group-hover:text-foreground leading-relaxed flex-1">
+                          {suggestion}
+                        </p>
+                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </button>
+                  ))}
+                  <p className="text-[10px] text-muted-foreground text-center pt-1">
+                    Click a suggestion to send it in chat
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground rounded-xl border border-dashed border-border bg-muted/20">
+                  <Sparkles className="h-5 w-5 mx-auto mb-2 opacity-40" />
+                  <p className="text-xs">No suggestions available</p>
+                </div>
+              )}
+            </div>
           </div>
         ) : activeTab === "chat" ? (
           <div className="flex flex-col h-full bg-gradient-to-b from-muted/50 to-background rounded-xl">

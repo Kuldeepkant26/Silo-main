@@ -1,0 +1,199 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+import { env } from "~/env";
+
+// Request validation schema
+const ticketSuggestionsSchema = z.object({
+  ticket: z.object({
+    id: z.union([z.string(), z.number()]),
+    title: z.string().nullable().optional(),
+    email: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    workflowStatus: z.string().nullable().optional(),
+    priority: z.string().nullable().optional(),
+    category: z.string().nullable().optional(),
+    reviewed: z.boolean().nullable().optional(),
+  }),
+});
+
+// System prompt for generating professional message suggestions based on ticket details
+const SYSTEM_PROMPT = `You are a professional assistant helping a reviewer generate message suggestions to send to a requester based on a support/legal ticket's details.
+
+You will be given ticket details (title, description, status, priority, category, etc.) and should generate exactly 4 short, professional messages the reviewer could send to the requester in the chat.
+
+Rules:
+- Keep each suggestion concise (1-3 sentences max)
+- Make them contextually relevant to the ticket details
+- Suggestions should cover different intents: acknowledging the request, asking for more details, providing a status update, and next steps
+- Don't use placeholders like [name] - keep it generic but relevant to the ticket context
+- Be professional and empathetic
+- Return ONLY a JSON array with 4 strings, nothing else
+
+Example output format:
+["Thank you for submitting your request. I've reviewed the details and will begin processing it shortly.", "Could you please provide additional documentation or details regarding this matter so we can proceed more efficiently?", "I wanted to update you that your request is currently being reviewed by our team. We'll follow up once we have more information.", "We've completed our initial review. The next step would be to schedule a follow-up discussion. Please let me know your availability."]`;
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validatedData = ticketSuggestionsSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: "Invalid request format", details: validatedData.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { ticket } = validatedData.data;
+
+    if (!env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: "Gemini API key not configured" },
+        { status: 500 }
+      );
+    }
+
+    // Build ticket context for Gemini
+    const ticketDetails = [
+      `Ticket #${ticket.id}`,
+      ticket.title ? `Title: ${ticket.title}` : null,
+      ticket.type ? `Type: ${ticket.type}` : null,
+      ticket.email ? `Requester Email: ${ticket.email}` : null,
+      ticket.description ? `Description: ${ticket.description}` : null,
+      ticket.workflowStatus ? `Status: ${ticket.workflowStatus.replace(/_/g, " ")}` : null,
+      ticket.priority ? `Priority: ${ticket.priority}` : null,
+      ticket.category ? `Category: ${ticket.category}` : null,
+      ticket.reviewed !== null && ticket.reviewed !== undefined
+        ? `Reviewed: ${ticket.reviewed ? "Yes" : "No"}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const userPrompt = `Here are the ticket details:\n\n${ticketDetails}\n\nGenerate 4 professional message suggestions that the reviewer could send to the requester based on these ticket details.`;
+
+    const contents = [
+      {
+        role: "user",
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
+      {
+        role: "model",
+        parts: [
+          {
+            text: '["I understand your request.", "Could you provide more details?", "Your request is being processed.", "Let me follow up on this."]',
+          },
+        ],
+      },
+      {
+        role: "user",
+        parts: [{ text: userPrompt }],
+      },
+    ];
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b-it:generateContent?key=${env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents,
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Gemini API error:", errorData);
+
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "Rate limit exceeded" },
+          { status: 429 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Failed to generate suggestions" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    const responseText =
+      data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!responseText) {
+      return NextResponse.json(
+        { error: "No response from AI" },
+        { status: 500 }
+      );
+    }
+
+    // Parse the JSON array from response
+    try {
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const suggestions = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(suggestions) && suggestions.length > 0) {
+          return NextResponse.json({
+            suggestions: suggestions.slice(0, 4),
+          });
+        }
+      }
+
+      // Fallback: return default suggestions
+      return NextResponse.json({
+        suggestions: [
+          "Thank you for submitting your request. I'll review the details and get back to you shortly.",
+          "Could you please provide any additional information or documents related to this request?",
+          "I've reviewed your request and it's currently being processed by our team.",
+          "We'll follow up with you soon regarding the next steps. Please don't hesitate to reach out if you have questions.",
+        ],
+      });
+    } catch {
+      return NextResponse.json({
+        suggestions: [
+          "Thank you for submitting your request. I'll review the details and get back to you shortly.",
+          "Could you please provide any additional information or documents related to this request?",
+          "I've reviewed your request and it's currently being processed by our team.",
+          "We'll follow up with you soon regarding the next steps. Please don't hesitate to reach out if you have questions.",
+        ],
+      });
+    }
+  } catch (error) {
+    console.error("Error in ticket-suggestions:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

@@ -269,7 +269,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M11 6H10V4C10 2.34 8.66 1 7 1C5.34 1 4 2.34 4 4V6H3C2.45 6 2 6.45 2 7V12C2 12.55 2.45 13 3 13H11C11.55 13 12 12.55 12 12V7C12 6.45 11.55 6 11 6ZM7 10C6.45 10 6 9.55 6 9C6 8.45 6.45 8 7 8C7.55 8 8 8.45 8 9C8 9.55 7.55 10 7 10ZM5.1 6V4C5.1 2.95 5.95 2.1 7 2.1C8.05 2.1 8.9 2.95 8.9 4V6H5.1Z" fill="currentColor"/>
                   </svg>
-                  {form.reviewerId ? "External request" : "Available to everyone"}
+                  {form.reviewerId ? "External request" : "No reviewer assigned"}
                 </span>
               </div>
               {/* Three-dot Menu */}

@@ -286,17 +286,23 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 overflow-hidden"
+            className="relative bg-gradient-to-br from-white to-neutral-50/50 dark:from-neutral-900 dark:to-neutral-900/50 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 overflow-hidden"
           >
             {/* Shimmer overlay */}
             <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-black/[0.04] dark:via-white/[0.04] to-transparent" />
 
             <div className="flex items-center gap-4 mb-5">
-              <div className="h-6 w-36 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
-              <div className="h-7 w-20 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+              <div className="h-10 w-10 rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-6 w-48 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
             </div>
-            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-5" />
-            <div className="h-11 w-64 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+            <div className="flex items-center gap-2 mb-5 ml-[52px]">
+              <div className="h-7 w-28 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+            </div>
+            <div className="h-px bg-gradient-to-r from-transparent via-neutral-200 dark:via-neutral-700 to-transparent mb-5" />
+            <div className="mb-2">
+              <div className="h-4 w-32 rounded bg-neutral-100 dark:bg-neutral-800 mb-2" />
+              <div className="h-11 w-80 rounded-xl bg-neutral-100 dark:bg-neutral-800" />
+            </div>
           </div>
         ))}
 
@@ -304,9 +310,9 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
           <div className="flex items-center gap-3">
             <div className="relative h-5 w-5">
               <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-700" />
-              <div className="absolute inset-0 rounded-full border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-indigo-600 dark:border-indigo-400 border-t-transparent dark:border-t-transparent animate-spin" />
             </div>
-            <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">Loading categories...</span>
+            <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Loading categories...</span>
           </div>
         </div>
       </div>
@@ -343,29 +349,43 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             }}
           >
           <div
-            className="group relative bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 transition-all duration-500 ease-out hover:border-neutral-300 dark:hover:border-neutral-600 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] overflow-hidden cursor-default"
+            className="group relative bg-gradient-to-br from-white to-neutral-50/50 dark:from-neutral-900 dark:to-neutral-900/50 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 transition-all duration-500 ease-out hover:border-neutral-300 dark:hover:border-neutral-600 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] overflow-hidden cursor-default hover:scale-[1.01]"
           >
-            {/* Top accent line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
             {/* Card Header */}
-            <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <h3 className="text-xl font-bold text-black dark:text-white m-0">{category.name}</h3>
-              <div className="flex gap-2 flex-1 flex-wrap">
-                {category.assignedTeam && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-sm font-medium rounded-lg border border-neutral-200 dark:border-neutral-700">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    {category.assignedTeam.name}
-                  </span>
-                )}
+            <div className="flex items-center gap-3 mb-5 flex-wrap">
+              {/* Category Icon */}
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
+              
+              <h3 className="text-xl font-bold text-black dark:text-white m-0 leading-tight">{category.name}</h3>
+              
+              {/* Team Badge */}
+              {category.assignedTeam ? (
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-700 dark:text-emerald-300 text-sm font-semibold rounded-lg border border-emerald-200 dark:border-emerald-700/50 shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  {category.assignedTeam.name}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold rounded-lg border border-amber-200 dark:border-amber-700/50 shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 13A6 6 0 1 0 7 1a6 6 0 0 0 0 12Z" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M7 1a6 6 0 0 1 0 12M7 1a6 6 0 0 0 0 12" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                  Available to everyone
+                </span>
+              )}
+              
               {/* Three-dot Menu */}
-              <div className="relative ml-auto" ref={openMenuId === category.id ? menuRef : null}>
+              <div className="relative flex-shrink-0 ml-auto" ref={openMenuId === category.id ? menuRef : null}>
                 <button
-                  className="p-2 bg-transparent border-none cursor-pointer text-neutral-400 dark:text-neutral-500 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  className="p-2.5 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 cursor-pointer text-neutral-500 dark:text-neutral-400 rounded-lg hover:bg-white dark:hover:bg-neutral-800 hover:text-black dark:hover:text-white transition-all duration-200 hover:shadow-md"
                   onClick={() => setOpenMenuId(openMenuId === category.id ? null : category.id)}
                   aria-label="Open actions"
                 >
@@ -376,18 +396,30 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   </svg>
                 </button>
                 {openMenuId === category.id && (
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg min-w-[150px] z-10 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl min-w-[160px] z-10 overflow-hidden backdrop-blur-sm">
                     <button
-                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-black dark:text-white cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm font-medium text-black dark:text-white cursor-pointer transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800"
                       onClick={() => openEditModal(category)}
                     >
-                      Edit
+                      <span className="flex items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Edit
+                      </span>
                     </button>
+                    <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-2" />
                     <button
-                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
+                      className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm font-medium text-red-600 dark:text-red-400 cursor-pointer transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                       onClick={() => openDeleteModal(category.id, category.name)}
                     >
-                      Delete
+                      <span className="flex items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Delete
+                      </span>
                     </button>
                   </div>
                 )}
@@ -395,50 +427,65 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-neutral-100 dark:bg-neutral-800 mb-4" />
+            <div className="h-px bg-gradient-to-r from-transparent via-neutral-200 dark:via-neutral-700 to-transparent mb-5" />
 
             {/* Card Body - Reviewer Dropdown */}
-            <div className="mb-3">
-              <div className="relative max-w-[280px]">
+            <div className="mb-4">
+              <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mb-2 block">
+                Assigned Reviewer
+              </label>
+              <div className="relative max-w-[320px]">
                 {updatingReviewerId === category.id && (
-                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 rounded-lg flex items-center justify-center z-10">
-                    <svg className="animate-spin h-5 w-5 text-black dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <div className="absolute inset-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+                    <svg className="animate-spin h-5 w-5 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </div>
                 )}
-                <select
-                  className="w-full py-3 px-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer appearance-none pr-10 focus:outline-none focus:border-black dark:focus:border-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  value={category.reviewerId || ""}
-                  onChange={(e) => handleReviewerChange(category.id, e.target.value)}
-                  disabled={updatingReviewerId === category.id}
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 16px center",
-                  }}
-                >
-                  <option value="">Select Reviewer</option>
-                  {reviewers.map((reviewer) => (
-                    <option key={reviewer.id} value={reviewer.id}>
-                      {reviewer.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-400">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="12" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <select
+                    className="w-full py-3 pl-11 pr-10 bg-white dark:bg-neutral-800/50 border-2 border-neutral-200 dark:border-neutral-700 rounded-xl text-sm font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer appearance-none focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:border-neutral-300 dark:hover:border-neutral-600"
+                    value={category.reviewerId || ""}
+                    onChange={(e) => handleReviewerChange(category.id, e.target.value)}
+                    disabled={updatingReviewerId === category.id}
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 16px center",
+                    }}
+                  >
+                    <option value="">Select Reviewer</option>
+                    {reviewers.map((reviewer) => (
+                      <option key={reviewer.id} value={reviewer.id}>
+                        {reviewer.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Card Footer - Automatic replies */}
             {category.autoReplyEnabled && (
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 text-sm">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-                    <circle cx="8" cy="8" r="3" fill="currentColor"/>
+              <div className="flex items-center gap-3 pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600 dark:text-purple-400">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 10h.01M12 10h.01M16 10h.01" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  Automatic replies
-                </span>
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 block">Automatic Replies Enabled</span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Auto-responding to requests</span>
+                </div>
+                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50" />
               </div>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2, Calendar, Scale, User, Tag, Mail, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
+import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2, Calendar, Scale, User, Tag, Mail, CheckCircle2, Clock } from "lucide-react";
 
 import {
   ACCEPTED_FILE_TYPES,
@@ -202,7 +202,8 @@ export function ReviewDetailPanel({
   // Ticket-based AI suggestion state (shown on Details tab)
   const [detailSuggestions, setDetailSuggestions] = useState<string[]>([]);
   const [loadingDetailSuggestions, setLoadingDetailSuggestions] = useState(false);
-  const [sendingSuggestion, setSendingSuggestion] = useState<number | null>(null);
+  const [detailReplyMessage, setDetailReplyMessage] = useState("");
+  const [sendingDetailReply, setSendingDetailReply] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -279,60 +280,60 @@ export function ReviewDetailPanel({
     fetchAttachmentUrls();
   }, [detailedReview]);
 
-  // Fetch ticket-based AI suggestions when details load
-  useEffect(() => {
-    const fetchDetailSuggestions = async () => {
-      if (!detailedReview) return;
-      setLoadingDetailSuggestions(true);
-      try {
-        const response = await fetch('/api/agent/ticket-suggestions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ticket: {
-              id: detailedReview.id,
-              title: review.title,
-              email: review.email,
-              type: review.type,
-              description: detailedReview.description,
-              workflowStatus: detailedReview.workflowStatus || review.workflowStatus,
-              priority: detailedReview.priority || review.urgency,
-              category: review.category,
-              reviewed: review.reviewed,
-            },
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setDetailSuggestions(data.suggestions || []);
-        }
-      } catch (error) {
-        console.error('Error fetching detail suggestions:', error);
-      } finally {
-        setLoadingDetailSuggestions(false);
+  // Fetch AI suggestions on demand (Details tab)
+  const fetchDetailSuggestions = async () => {
+    if (!detailedReview) return;
+    setLoadingDetailSuggestions(true);
+    setDetailSuggestions([]);
+    try {
+      const response = await fetch('/api/agent/ticket-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket: {
+            id: detailedReview.id,
+            title: review.title,
+            email: review.email,
+            type: review.type,
+            description: detailedReview.description,
+            workflowStatus: detailedReview.workflowStatus || review.workflowStatus,
+            priority: detailedReview.priority || review.urgency,
+            category: review.category,
+            reviewed: review.reviewed,
+          },
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDetailSuggestions(data.suggestions || []);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching detail suggestions:', error);
+    } finally {
+      setLoadingDetailSuggestions(false);
+    }
+  };
 
-    fetchDetailSuggestions();
-  }, [detailedReview]);
-
-  // Handle sending a suggestion from the Details tab: send message + switch to Chat
-  const handleSendSuggestion = async (suggestion: string, index: number) => {
-    if (!userId || !userEmail || sendingSuggestion !== null) return;
-    setSendingSuggestion(index);
+  // Handle sending the reply from the Details tab: send detailReplyMessage + switch to Chat
+  const handleSendDetailReply = async () => {
+    const text = detailReplyMessage.trim();
+    if (!text || !userId || !userEmail || sendingDetailReply) return;
+    setSendingDetailReply(true);
 
     const tempId = Date.now();
     const tempMessage: ChatMessage = {
       id: tempId,
-      message: suggestion,
+      message: text,
       attachments: [],
       senderType: "ADMIN",
       senderEmail: userEmail,
       createdAt: new Date().toISOString(),
     };
 
-    // Add message optimistically
+    // Add message optimistically and clear input
     setMessages(prev => [...prev, tempMessage]);
+    setDetailReplyMessage("");
+    setDetailSuggestions([]);
 
     try {
       const response = await fetch(
@@ -346,7 +347,7 @@ export function ReviewDetailPanel({
           body: JSON.stringify({
             user_id: userId,
             email: userEmail,
-            message: suggestion,
+            message: text,
             attachments: [],
           }),
         }
@@ -368,13 +369,15 @@ export function ReviewDetailPanel({
       } else {
         // Rollback on failure
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        console.error("Failed to send suggestion message");
+        setDetailReplyMessage(text);
+        console.error("Failed to send reply message");
       }
     } catch (error) {
-      console.error("Error sending suggestion message:", error);
+      console.error("Error sending reply message:", error);
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      setDetailReplyMessage(text);
     } finally {
-      setSendingSuggestion(null);
+      setSendingDetailReply(false);
     }
   };
 
@@ -868,111 +871,101 @@ export function ReviewDetailPanel({
               </div>
             )}
 
-            {/* AI Suggested Messages */}
-            <div>
-              <div className="flex items-center justify-between mb-2.5">
-                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                  <div className="p-1 rounded-md bg-primary shadow-sm">
-                    <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
-                  </div>
-                  AI Suggested Messages
-                </label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                  disabled={loadingDetailSuggestions}
-                  onClick={async () => {
-                    if (!detailedReview) return;
-                    setLoadingDetailSuggestions(true);
-                    try {
-                      const response = await fetch('/api/agent/ticket-suggestions', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          ticket: {
-                            id: detailedReview.id,
-                            title: review.title,
-                            email: review.email,
-                            type: review.type,
-                            description: detailedReview.description,
-                            workflowStatus: detailedReview.workflowStatus || review.workflowStatus,
-                            priority: detailedReview.priority || review.urgency,
-                            category: review.category,
-                            reviewed: review.reviewed,
-                          },
-                        }),
-                      });
-                      if (response.ok) {
-                        const data = await response.json();
-                        setDetailSuggestions(data.suggestions || []);
-                      }
-                    } catch (error) {
-                      console.error('Error refreshing detail suggestions:', error);
-                    } finally {
-                      setLoadingDetailSuggestions(false);
-                    }
-                  }}
-                >
-                  <RefreshCw className={cn("h-3 w-3 mr-1", loadingDetailSuggestions && "animate-spin")} />
-                  Refresh
-                </Button>
+            {/* Reply Section */}
+            <div className="rounded-xl border border-border bg-muted/20 dark:bg-muted/10 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-border bg-background/60">
+                <div className="p-1 rounded-md bg-primary shadow-sm shrink-0">
+                  <Send className="h-3 w-3 text-primary-foreground" />
+                </div>
+                <span className="text-sm font-medium text-foreground">Reply</span>
               </div>
 
-              {loadingDetailSuggestions ? (
-                <div className="space-y-2.5">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="h-14 rounded-xl bg-muted/50 dark:bg-muted/30 animate-pulse border border-border/50"
-                    />
-                  ))}
+              {/* Input field */}
+              <div className="p-3 space-y-3">
+                <textarea
+                  value={detailReplyMessage}
+                  onChange={(e) => setDetailReplyMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendDetailReply();
+                    }
+                  }}
+                  placeholder="Write your reply here, or get AI suggestions below..."
+                  rows={3}
+                  className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 transition-shadow"
+                />
+
+                {/* Action buttons row */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs gap-1.5 flex-1"
+                    disabled={loadingDetailSuggestions || !detailedReview}
+                    onClick={fetchDetailSuggestions}
+                  >
+                    {loadingDetailSuggestions ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    {loadingDetailSuggestions ? "Generating..." : "Get AI Suggestions"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8 px-4 text-xs gap-1.5"
+                    disabled={!detailReplyMessage.trim() || sendingDetailReply}
+                    onClick={handleSendDetailReply}
+                  >
+                    {sendingDetailReply ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Send className="h-3 w-3" />
+                    )}
+                    Send
+                  </Button>
                 </div>
-              ) : detailSuggestions.length > 0 ? (
-                <div className="space-y-2">
-                  {detailSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSendSuggestion(suggestion, index)}
-                      disabled={sendingSuggestion !== null}
-                      className={cn(
-                        "w-full text-left p-3 rounded-xl border transition-all duration-200 group",
-                        "bg-background dark:bg-muted/40 border-border",
-                        "hover:border-primary/50 hover:bg-accent hover:shadow-md",
-                        sendingSuggestion === index && "border-primary bg-primary/5 opacity-80",
-                        sendingSuggestion !== null && sendingSuggestion !== index && "opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <div className={cn(
-                          "mt-0.5 p-1 rounded-md shrink-0 transition-colors",
-                          sendingSuggestion === index
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted dark:bg-muted/60 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
-                        )}>
-                          {sendingSuggestion === index ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Send className="h-3 w-3" />
-                          )}
+
+                {/* AI Suggestions */}
+                {loadingDetailSuggestions && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium px-0.5">Generating suggestions...</p>
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="h-12 rounded-lg bg-muted/50 dark:bg-muted/30 animate-pulse border border-border/50"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {!loadingDetailSuggestions && detailSuggestions.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium px-0.5">AI Suggestions — click to use</p>
+                    {detailSuggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setDetailReplyMessage(suggestion)}
+                        className={cn(
+                          "w-full text-left p-2.5 rounded-lg border transition-all duration-150 group text-xs",
+                          "bg-background dark:bg-muted/40 border-border",
+                          "hover:border-primary/60 hover:bg-accent hover:shadow-sm",
+                          detailReplyMessage === suggestion && "border-primary bg-primary/5 dark:bg-primary/10"
+                        )}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Wand2 className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <span className="text-foreground/80 group-hover:text-foreground leading-relaxed flex-1">
+                            {suggestion}
+                          </span>
                         </div>
-                        <p className="text-xs text-foreground/80 group-hover:text-foreground leading-relaxed flex-1">
-                          {suggestion}
-                        </p>
-                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </button>
-                  ))}
-                  <p className="text-[10px] text-muted-foreground text-center pt-1">
-                    Click a suggestion to send it in chat
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground rounded-xl border border-dashed border-border bg-muted/20">
-                  <Sparkles className="h-5 w-5 mx-auto mb-2 opacity-40" />
-                  <p className="text-xs">No suggestions available</p>
-                </div>
-              )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : activeTab === "chat" ? (

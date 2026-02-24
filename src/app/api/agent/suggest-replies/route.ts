@@ -27,6 +27,7 @@ Rules:
 - Make them professional and helpful
 - Vary the tone slightly: one more formal, one friendly, one direct
 - Don't use placeholders like [name] - keep it generic
+- IMPORTANT: Detect the language of the conversation (especially the most recent messages). Your suggestions MUST be in the SAME language the user/requester is writing in. For example, if the conversation is in Spanish, reply in Spanish. If in French, reply in French. If in English, reply in English. Always match the language of the conversation.
 - Return ONLY a JSON array with 3 strings, nothing else
 
 Example output format:

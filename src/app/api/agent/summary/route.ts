@@ -23,9 +23,12 @@ Format the summary using clean markdown with:
 - "Action Items" if any tasks or follow-ups were identified
 - "Additional Notes" for anything else relevant
 
-Be concise, professional, and ensure the summary captures all important information. Use proper formatting with headers, bullet points, and bold text for emphasis.`;
+Be concise, professional, and ensure the summary captures all important information. Use proper formatting with headers, bullet points, and bold text for emphasis.
 
-const REFINEMENT_SYSTEM_PROMPT = `You are a professional document editor. The user has an existing summary document and wants changes made. Apply the requested changes while maintaining the professional formatting and structure. Return the complete updated document in markdown.`;
+IMPORTANT: Detect the primary language used in the conversation. The summary MUST be written in the SAME language. For example, if the conversation is in Spanish, write the summary in Spanish. If in French, write in French. If in English, write in English. Always match the conversation's language.`;
+
+const REFINEMENT_SYSTEM_PROMPT = `You are a professional document editor. The user has an existing summary document and wants changes made. Apply the requested changes while maintaining the professional formatting and structure. Return the complete updated document in markdown.
+IMPORTANT: Detect the language of the existing document and the user's refinement request. Respond in the SAME language as the document. If the refinement request is in a different language, still keep the document in its original language unless the user explicitly asks to change the language.`;
 
 export async function POST(request: NextRequest) {
   try {

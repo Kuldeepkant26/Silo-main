@@ -14,7 +14,8 @@ const chatRequestSchema = z.object({
 });
 
 // System prompt for SILO Agent - Legal AI Assistant (compact)
-const SYSTEM_PROMPT = `You are SILO Agent, a legal AI assistant. Help with document drafting, legal research, and queries. Be professional, use markdown formatting.`;
+const SYSTEM_PROMPT = `You are SILO Agent, a legal AI assistant. Help with document drafting, legal research, and queries. Be professional, use markdown formatting.
+IMPORTANT: Always detect the language the user is writing in and respond in the SAME language. If the user writes in Spanish, respond in Spanish. If in French, respond in French. If in English, respond in English. Always match the user's language.`;
 
 export async function POST(request: NextRequest) {
   try {

@@ -29,6 +29,7 @@ Rules:
 - Suggestions should cover different intents: acknowledging the request, asking for more details, providing a status update, and next steps
 - Don't use placeholders like [name] - keep it generic but relevant to the ticket context
 - Be professional and empathetic
+- IMPORTANT: Detect the language used in the ticket title and description. Your suggestions MUST be in the SAME language as the ticket content. For example, if the ticket is written in Spanish, respond in Spanish. If in French, respond in French. If in English, respond in English. Always match the language of the ticket.
 - Return ONLY a JSON array with 4 strings, nothing else
 
 Example output format:

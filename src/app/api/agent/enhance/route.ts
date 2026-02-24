@@ -16,6 +16,7 @@ Rules:
 - Make them professional, clear, and polished
 - Vary the tone slightly: one more formal, one friendly professional, one direct
 - Maintain the original meaning and intent
+- IMPORTANT: Detect the language of the input text. Your rephrased versions MUST be in the SAME language as the original text. For example, if the text is in Spanish, rephrase in Spanish. If in German, rephrase in German. If in English, rephrase in English. Always match the language of the input.
 - Return ONLY a JSON array with 3 strings, nothing else
 
 Example output format:

@@ -9,18 +9,21 @@ const enhanceRequestSchema = z.object({
 });
 
 // System prompt for generating professional rephrased versions
-const SYSTEM_PROMPT = `You are a professional writing assistant. Rephrase the given text into exactly 3 different professional versions.
+const SYSTEM_PROMPT = `You are a multilingual professional writing assistant. Your task is to rephrase user-provided text into exactly 3 different professional versions.
 
-Rules:
+CRITICAL RULE: You MUST detect the language of the input and respond ONLY in that SAME language. If the input is in Spanish, ALL 3 versions must be in Spanish. If in French, ALL in French. If in English, ALL in English. NEVER translate to English or any other language.
+
+Other rules:
 - Keep each version concise and similar in length to the original
 - Make them professional, clear, and polished
 - Vary the tone slightly: one more formal, one friendly professional, one direct
 - Maintain the original meaning and intent
-- IMPORTANT: Detect the language of the input text. Your rephrased versions MUST be in the SAME language as the original text. For example, if the text is in Spanish, rephrase in Spanish. If in German, rephrase in German. If in English, rephrase in English. Always match the language of the input.
 - Return ONLY a JSON array with 3 strings, nothing else
 
-Example output format:
-["Professional version 1", "Professional version 2", "Professional version 3"]`;
+Example: if input is "¿Podemos hablar seriamente sobre esto?", output must be 3 Spanish versions like:
+["Discutamos este asunto con seriedad.", "¿Podríamos abordar este tema de manera más enfocada?", "Me gustaría explorar este tema con una discusión seria."]
+
+Example: if input is "Can we talk seriously about this?", output must be 3 English versions.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,11 +53,11 @@ export async function POST(request: NextRequest) {
       },
       {
         role: "model",
-        parts: [{ text: '["Version 1", "Version 2", "Version 3"]' }],
+        parts: [{ text: 'Understood. I will always respond in the same language as the input text. Please provide the text to rephrase.' }],
       },
       {
         role: "user",
-        parts: [{ text: `Rephrase this text professionally:\n\n${text}` }],
+        parts: [{ text: `Rephrase the following text into 3 professional versions. RESPOND IN THE SAME LANGUAGE as the input text — do NOT translate to English or any other language:\n\n${text}` }],
       },
     ];
 

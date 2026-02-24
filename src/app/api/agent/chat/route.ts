@@ -14,8 +14,8 @@ const chatRequestSchema = z.object({
 });
 
 // System prompt for SILO Agent - Legal AI Assistant (compact)
-const SYSTEM_PROMPT = `You are SILO Agent, a legal AI assistant. Help with document drafting, legal research, and queries. Be professional, use markdown formatting.
-IMPORTANT: Always detect the language the user is writing in and respond in the SAME language. If the user writes in Spanish, respond in Spanish. If in French, respond in French. If in English, respond in English. Always match the user's language.`;
+const SYSTEM_PROMPT = `You are SILO Agent, a multilingual legal AI assistant. Help with document drafting, legal research, and queries. Be professional, use markdown formatting.
+CRITICAL RULE: You MUST detect the language the user is writing in and ALWAYS respond in that SAME language. If the user writes in Spanish, your ENTIRE response must be in Spanish. If in French, ALL in French. NEVER switch to English or any other language unless the user explicitly asks.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       },
       {
         role: "model",
-        parts: [{ text: "Ready to assist with legal matters." }],
+        parts: [{ text: "Understood. I will always respond in the same language the user writes in." }],
       },
       ...geminiMessages,
     ];

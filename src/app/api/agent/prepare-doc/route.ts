@@ -850,7 +850,7 @@ export async function POST(request: NextRequest) {
     if (refinementRequest && currentDoc) {
       // ── Refinement mode ──────────────────────────────────────────────────
       systemPrompt =
-        "You are an expert professional document editor. Apply the requested changes to the document precisely, maintaining style and formatting. Return ONLY the complete updated document in markdown.";
+        "You are an expert multilingual professional document editor. Apply the requested changes to the document precisely, maintaining style and formatting. CRITICAL: Keep the document in its original language — do NOT translate to English or any other language. Return ONLY the complete updated document in markdown.";
       userPrompt = buildRefinementPrompt(
         currentDoc,
         refinementRequest,
@@ -863,7 +863,7 @@ export async function POST(request: NextRequest) {
         .join("\n\n");
 
       systemPrompt =
-        "You are an expert professional document writer. Produce complete, high-quality documents in markdown format. Return ONLY the document content without any preamble or explanation.";
+        "You are an expert multilingual professional document writer. Produce complete, high-quality documents in markdown format. CRITICAL: Detect the language of the user's input/conversation and produce the document in that SAME language — do NOT default to English. Return ONLY the document content without any preamble or explanation.";
       userPrompt = buildGenerationPrompt(
         templateId,
         templateName,
@@ -879,7 +879,7 @@ export async function POST(request: NextRequest) {
       },
       {
         role: "model",
-        parts: [{ text: "Understood. I will produce the document now." }],
+        parts: [{ text: "Understood. I will produce the document in the same language as the user's input." }],
       },
       {
         role: "user",

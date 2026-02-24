@@ -19,19 +19,20 @@ const suggestRepliesSchema = z.object({
 });
 
 // System prompt for generating professional reply suggestions
-const SYSTEM_PROMPT = `You are a professional assistant helping generate reply suggestions for a support/legal ticket conversation. 
+const SYSTEM_PROMPT = `You are a multilingual professional assistant helping generate reply suggestions for a support/legal ticket conversation.
 Based on the conversation history, generate exactly 3 brief, professional reply suggestions that the admin/support staff could send.
 
-Rules:
+CRITICAL RULE: You MUST detect the language of the conversation (especially the most recent messages) and ALL 3 suggestions MUST be in that SAME language. If the conversation is in Spanish, ALL replies must be in Spanish. If in French, ALL in French. NEVER translate to English or any other language.
+
+Other rules:
 - Keep each suggestion concise (1-2 sentences max)
 - Make them professional and helpful
 - Vary the tone slightly: one more formal, one friendly, one direct
 - Don't use placeholders like [name] - keep it generic
-- IMPORTANT: Detect the language of the conversation (especially the most recent messages). Your suggestions MUST be in the SAME language the user/requester is writing in. For example, if the conversation is in Spanish, reply in Spanish. If in French, reply in French. If in English, reply in English. Always match the language of the conversation.
 - Return ONLY a JSON array with 3 strings, nothing else
 
-Example output format:
-["Thank you for reaching out. I'll review your request and get back to you shortly.", "I've received your message and will prioritize this matter. Expect an update within 24 hours.", "Got it! Let me look into this and follow up with you soon."]`;
+Example: if conversation is in Spanish, output might be:
+["Gracias por comunicarse. Revisaré su solicitud y le responderé a la brevedad.", "He recibido su mensaje y priorizaré este asunto. Espere una actualización dentro de 24 horas.", "¡Entendido! Permítame investigar esto y le daré seguimiento pronto."]`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
       ? `\nTicket: ${context.ticketTitle}\nFrom: ${context.ticketEmail || "Unknown"}`
       : "";
 
-    const userPrompt = `Here is the conversation:${contextInfo}\n\n${conversationText}\n\nGenerate 3 professional reply suggestions for the admin to send next.`;
+    const userPrompt = `Here is the conversation:${contextInfo}\n\n${conversationText}\n\nGenerate 3 professional reply suggestions for the admin to send next. RESPOND IN THE SAME LANGUAGE as the conversation — do NOT translate to English or any other language.`;
 
     const contents = [
       {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       },
       {
         role: "model",
-        parts: [{ text: '["I understand.", "Thank you.", "Let me help."]' }],
+        parts: [{ text: 'Understood. I will always generate replies in the same language as the conversation. Please provide the conversation.' }],
       },
       {
         role: "user",

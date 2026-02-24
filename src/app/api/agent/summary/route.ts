@@ -13,22 +13,22 @@ const summaryRequestSchema = z.object({
   currentSummary: z.string().optional(),
 });
 
-const SUMMARY_SYSTEM_PROMPT = `You are a professional document summarizer. Given a conversation between a user and an AI assistant, produce a well-structured, professional summary document.
+const SUMMARY_SYSTEM_PROMPT = `You are a multilingual professional document summarizer. Given a conversation between a user and an AI assistant, produce a well-structured, professional summary document.
+
+CRITICAL RULE: You MUST detect the primary language used in the conversation, and the ENTIRE summary MUST be written in that SAME language. If the conversation is in Spanish, write ALL headings and content in Spanish. If in French, ALL in French. NEVER translate to English or any other language.
 
 Format the summary using clean markdown with:
-- A clear title (# Summary)
+- A clear title (# Summary — or equivalent in the detected language)
 - An "Overview" section with a brief 2-3 sentence synopsis
 - "Key Discussion Points" as bullet points
 - "Decisions & Outcomes" if any conclusions were reached
 - "Action Items" if any tasks or follow-ups were identified
 - "Additional Notes" for anything else relevant
 
-Be concise, professional, and ensure the summary captures all important information. Use proper formatting with headers, bullet points, and bold text for emphasis.
+Be concise, professional, and ensure the summary captures all important information. Use proper formatting with headers, bullet points, and bold text for emphasis.`;
 
-IMPORTANT: Detect the primary language used in the conversation. The summary MUST be written in the SAME language. For example, if the conversation is in Spanish, write the summary in Spanish. If in French, write in French. If in English, write in English. Always match the conversation's language.`;
-
-const REFINEMENT_SYSTEM_PROMPT = `You are a professional document editor. The user has an existing summary document and wants changes made. Apply the requested changes while maintaining the professional formatting and structure. Return the complete updated document in markdown.
-IMPORTANT: Detect the language of the existing document and the user's refinement request. Respond in the SAME language as the document. If the refinement request is in a different language, still keep the document in its original language unless the user explicitly asks to change the language.`;
+const REFINEMENT_SYSTEM_PROMPT = `You are a multilingual professional document editor. The user has an existing summary document and wants changes made. Apply the requested changes while maintaining the professional formatting and structure. Return the complete updated document in markdown.
+CRITICAL RULE: Detect the language of the existing document. The updated document MUST remain in that SAME language. NEVER translate the document to English or any other language unless the user explicitly requests a language change.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,13 +62,13 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "model",
-          parts: [{ text: "Ready to refine the document." }],
+          parts: [{ text: "Understood. I will refine the document and keep it in its original language." }],
         },
         {
           role: "user",
           parts: [
             {
-              text: `Here is the current summary document:\n\n${currentSummary}\n\n---\n\nPlease make the following changes:\n${refinementRequest}`,
+              text: `Here is the current summary document:\n\n${currentSummary}\n\n---\n\nPlease make the following changes (keep the document in its original language — do NOT translate):\n${refinementRequest}`,
             },
           ],
         },
@@ -86,13 +86,13 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "model",
-          parts: [{ text: "Ready to create a professional summary." }],
+          parts: [{ text: "Understood. I will create the summary in the same language as the conversation." }],
         },
         {
           role: "user",
           parts: [
             {
-              text: `Please create a professional summary of the following conversation:\n\n${conversationText}`,
+              text: `Create a professional summary of the following conversation. WRITE THE SUMMARY IN THE SAME LANGUAGE as the conversation — do NOT translate to English or any other language:\n\n${conversationText}`,
             },
           ],
         },

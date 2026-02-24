@@ -19,21 +19,22 @@ const ticketSuggestionsSchema = z.object({
 });
 
 // System prompt for generating professional message suggestions based on ticket details
-const SYSTEM_PROMPT = `You are a professional assistant helping a reviewer generate message suggestions to send to a requester based on a support/legal ticket's details.
+const SYSTEM_PROMPT = `You are a multilingual professional assistant helping a reviewer generate message suggestions to send to a requester based on a support/legal ticket's details.
 
 You will be given ticket details (title, description, status, priority, category, etc.) and should generate exactly 4 short, professional messages the reviewer could send to the requester in the chat.
 
-Rules:
+CRITICAL RULE: You MUST detect the language used in the ticket title and description, and ALL 4 suggestions MUST be in that SAME language. If the ticket is in Spanish, ALL suggestions must be in Spanish. If in French, ALL in French. NEVER translate to English or any other language.
+
+Other rules:
 - Keep each suggestion concise (1-3 sentences max)
 - Make them contextually relevant to the ticket details
 - Suggestions should cover different intents: acknowledging the request, asking for more details, providing a status update, and next steps
 - Don't use placeholders like [name] - keep it generic but relevant to the ticket context
 - Be professional and empathetic
-- IMPORTANT: Detect the language used in the ticket title and description. Your suggestions MUST be in the SAME language as the ticket content. For example, if the ticket is written in Spanish, respond in Spanish. If in French, respond in French. If in English, respond in English. Always match the language of the ticket.
 - Return ONLY a JSON array with 4 strings, nothing else
 
-Example output format:
-["Thank you for submitting your request. I've reviewed the details and will begin processing it shortly.", "Could you please provide additional documentation or details regarding this matter so we can proceed more efficiently?", "I wanted to update you that your request is currently being reviewed by our team. We'll follow up once we have more information.", "We've completed our initial review. The next step would be to schedule a follow-up discussion. Please let me know your availability."]`;
+Example: if ticket is in Spanish, output might be:
+["Gracias por enviar su solicitud. He revisado los detalles y comenzaré a procesarla en breve.", "¿Podría proporcionar documentación o detalles adicionales sobre este asunto para que podamos proceder de manera más eficiente?", "Quería informarle que su solicitud está siendo revisada por nuestro equipo.", "Hemos completado nuestra revisión inicial. El siguiente paso sería programar una discusión de seguimiento."]`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join("\n");
 
-    const userPrompt = `Here are the ticket details:\n\n${ticketDetails}\n\nGenerate 4 professional message suggestions that the reviewer could send to the requester based on these ticket details.`;
+    const userPrompt = `Here are the ticket details:\n\n${ticketDetails}\n\nGenerate 4 professional message suggestions. RESPOND IN THE SAME LANGUAGE as the ticket content — do NOT translate to English or any other language.`;
 
     const contents = [
       {
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
         role: "model",
         parts: [
           {
-            text: '["I understand your request.", "Could you provide more details?", "Your request is being processed.", "Let me follow up on this."]',
+            text: 'Understood. I will always generate suggestions in the same language as the ticket content. Please provide the ticket details.',
           },
         ],
       },

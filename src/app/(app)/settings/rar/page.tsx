@@ -87,12 +87,12 @@ export default function SettingsRequestsAndReviewsPage() {
             </div>
 
             {/* CTA Button - hidden for legal role on categories tab */}
-            {!(userRole?.isLegal && activeTab === "categories") && (
+            {!(userRole?.isLegal && activeTab === "categories") && activeTab !== "tags" && (
               <button 
                 className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
                 onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
               >
-                {activeTab === "tags" ? "CREATE TAG" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
+                {activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
               </button>
             )}
           </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { X, ChevronUp, ChevronDown, Settings, Info, Send, RefreshCw, Sparkles, Wand2, Paperclip, FileText, Image as ImageIcon, Loader2, Calendar, Scale, User, Tag, Mail, CheckCircle2, Clock } from "lucide-react";
+import { getLocaleFromCookie } from "~/lib/locale";
 
 import {
   ACCEPTED_FILE_TYPES,
@@ -31,9 +32,10 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
-import { Input } from "./ui/input";
 
 import { getSessionAuthHeader } from "~/lib/api-auth";
+import { api } from "~/trpc/react";
+import { ReviewEditModal } from "./review-edit-modal";
 
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -55,6 +57,7 @@ interface ReviewDetailPanelProps {
   };
   onClose: () => void;
   onNavigate: (direction: "prev" | "next") => void;
+  hideReply?: boolean;
 }
 
 interface DetailedReview {
@@ -63,6 +66,8 @@ interface DetailedReview {
   priority: "HIGH" | "MID" | "LOW" | null;
   assignedTeamId: string | null;
   legalOwnerId: string | null;
+  assignedTeamName: string | null;
+  legalOwnerName: string | null;
   description: string | null;
   payload: {
     attachments?: Array<{
@@ -93,6 +98,17 @@ interface ChatUploadedFile {
   id: string;
   uploaded: boolean;
   error?: string;
+}
+
+interface TicketComment {
+  id: number;
+  ticketId: number;
+  userId: string;
+  senderName?: string | null;
+  senderEmail?: string | null;
+  senderType?: string | null;
+  comment: string;
+  createdAt: string;
 }
 
 // Component to render a chat attachment with signed URL
@@ -167,13 +183,21 @@ export function ReviewDetailPanel({
   review,
   onClose,
   onNavigate,
+  hideReply = false,
 }: ReviewDetailPanelProps) {
   const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const userId = auth?.user?.id;
   const userEmail = auth?.user?.email;
+  const userDisplayName = auth?.user?.name;
   const authHeader = getSessionAuthHeader(auth);
-  
+  const organizationId = auth?.session?.activeOrganizationId;
+
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery(undefined, {
+    enabled: !!organizationId,
+  });
+  const isMember = userRole?.isMember ?? false;
+
   const [activeTab, setActiveTab] = useState<"details" | "chat">(
     "details"
   );
@@ -207,42 +231,60 @@ export function ReviewDetailPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Ticket comments state
+  const [ticketComments, setTicketComments] = useState<TicketComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  // Comment AI state
+  const [commentAiSuggestions, setCommentAiSuggestions] = useState<string[]>([]);
+  const [loadingCommentSuggestions, setLoadingCommentSuggestions] = useState(false);
+  const [showCommentSuggestions, setShowCommentSuggestions] = useState(false);
+  const [commentEnhancedVersions, setCommentEnhancedVersions] = useState<string[]>([]);
+  const [loadingCommentEnhance, setLoadingCommentEnhance] = useState(false);
+  const [showCommentEnhanced, setShowCommentEnhanced] = useState(false);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  // Reusable fetch function for review details
+  const fetchReviewDetails = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/get-ticket-detail/${review.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": authHeader ?? "",
+          },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        // API returns { tickets: [...] }
+        if (data.tickets && data.tickets.length > 0) {
+          setDetailedReview(data.tickets[0]);
+        } else {
+          setError("No ticket details found");
+        }
+      } else {
+        setError("Failed to load review details");
+      }
+    } catch (error) {
+      console.error("Error fetching review details:", error);
+      setError("Error connecting to server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch detailed review data
   useEffect(() => {
-    const fetchReviewDetails = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/get-ticket-detail/${review.id}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": authHeader ?? "",
-            },
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          // API returns { tickets: [...] }
-          if (data.tickets && data.tickets.length > 0) {
-            setDetailedReview(data.tickets[0]);
-          } else {
-            setError("No ticket details found");
-          }
-        } else {
-          setError("Failed to load review details");
-        }
-      } catch (error) {
-        console.error("Error fetching review details:", error);
-        setError("Error connecting to server");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchReviewDetails();
   }, [review.id]);
 
@@ -301,6 +343,7 @@ export function ReviewDetailPanel({
             category: review.category,
             reviewed: review.reviewed,
           },
+          language: getLocaleFromCookie(),
         }),
       });
       if (response.ok) {
@@ -380,6 +423,66 @@ export function ReviewDetailPanel({
       setSendingDetailReply(false);
     }
   };
+
+  // Fetch ticket comments (for Details tab)
+  const fetchTicketComments = async () => {
+    setLoadingComments(true);
+    try {
+      const queryParams = userId
+        ? `user_id=${userId}`
+        : userEmail
+        ? `email=${encodeURIComponent(userEmail)}&user_id=${userId ?? ""}`
+        : "";
+      const url = `${API_BASE_URL}/api/ticket-comments/${review.id}${queryParams ? `?${queryParams}` : ""}`;
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": authHeader ?? "",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTicketComments(data.comments ?? data ?? []);
+      }
+    } catch (err) {
+      console.error("Error fetching ticket comments:", err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Post a ticket comment
+  const handleAddTicketComment = async () => {
+    const text = newComment.trim();
+    if (!text || !userId || submittingComment) return;
+    setSubmittingComment(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ticket-comment/${review.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": authHeader ?? "",
+        },
+        body: JSON.stringify({ user_id: userId, comment: text }),
+      });
+      if (response.ok) {
+        setNewComment("");
+        await fetchTicketComments();
+      }
+    } catch (err) {
+      console.error("Error posting ticket comment:", err);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Fetch comments when details tab is active
+  useEffect(() => {
+    if (activeTab === "details") {
+      fetchTicketComments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [review.id, activeTab]);
 
   // Fetch chat messages
   useEffect(() => {
@@ -600,9 +703,11 @@ export function ReviewDetailPanel({
         </div>
                 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" />
-          </Button>
+          {!isMember && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModalOpen(true)} title="Edit ticket">
+              <Settings className="h-4 w-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Info className="h-4 w-4" />
           </Button>
@@ -821,12 +926,12 @@ export function ReviewDetailPanel({
               )}
 
               {/* Legal Owner */}
-              {(review.legalName || detailedReview.legalOwnerId) && (
+              {(review.legalName || detailedReview.legalOwnerName || detailedReview.legalOwnerId) && (
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Scale className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-muted-foreground">Legal Owner</p>
-                    <p className="text-sm font-medium text-foreground">{review.legalName || detailedReview.legalOwnerId}</p>
+                    <p className="text-sm font-medium text-foreground">{review.legalName || detailedReview.legalOwnerName || detailedReview.legalOwnerId}</p>
                   </div>
                 </div>
               )}
@@ -843,13 +948,13 @@ export function ReviewDetailPanel({
               )}
 
               {/* Assigned Team */}
-              {detailedReview.assignedTeamId && (
+              {(detailedReview.assignedTeamName || detailedReview.assignedTeamId) && (
                 <div className="flex items-center gap-3 px-4 py-3">
                   <User className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-muted-foreground">Assigned Team</p>
                     <Badge className="bg-green-600 dark:bg-green-700 text-white rounded px-2.5 text-xs mt-0.5">
-                      {detailedReview.assignedTeamId}
+                      {detailedReview.assignedTeamName || detailedReview.assignedTeamId}
                     </Badge>
                   </div>
                 </div>
@@ -871,99 +976,296 @@ export function ReviewDetailPanel({
               </div>
             )}
 
-            {/* Reply Section */}
+            {/* Ticket Comments */}
             <div className="rounded-xl border border-border bg-muted/20 dark:bg-muted/10 overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-border bg-background/60">
-                <div className="p-1 rounded-md bg-primary shadow-sm shrink-0">
-                  <Send className="h-3 w-3 text-primary-foreground" />
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-background/60">
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1 rounded-md bg-muted shrink-0">
+                    <Send className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">Comments</span>
+                  {ticketComments.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 ml-1">
+                      {ticketComments.length}
+                    </Badge>
+                  )}
                 </div>
-                <span className="text-sm font-medium text-foreground">Reply</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={fetchTicketComments}
+                  disabled={loadingComments}
+                  title="Refresh comments"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", loadingComments && "animate-spin")} />
+                </Button>
               </div>
 
-              {/* Input field */}
-              <div className="p-3 space-y-3">
-                <textarea
-                  value={detailReplyMessage}
-                  onChange={(e) => setDetailReplyMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendDetailReply();
-                    }
-                  }}
-                  placeholder="Write your reply here, or get AI suggestions below..."
-                  rows={3}
-                  className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 transition-shadow"
-                />
-
-                {/* Action buttons row */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs gap-1.5 flex-1"
-                    disabled={loadingDetailSuggestions || !detailedReview}
-                    onClick={fetchDetailSuggestions}
-                  >
-                    {loadingDetailSuggestions ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    {loadingDetailSuggestions ? "Generating..." : "Get AI Suggestions"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8 px-4 text-xs gap-1.5"
-                    disabled={!detailReplyMessage.trim() || sendingDetailReply}
-                    onClick={handleSendDetailReply}
-                  >
-                    {sendingDetailReply ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Send className="h-3 w-3" />
-                    )}
-                    Send
-                  </Button>
-                </div>
-
-                {/* AI Suggestions */}
-                {loadingDetailSuggestions && (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium px-0.5">Generating suggestions...</p>
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-12 rounded-lg bg-muted/50 dark:bg-muted/30 animate-pulse border border-border/50"
-                      />
+              {/* Comments list */}
+              <div className="p-3 space-y-2">
+                {loadingComments ? (
+                  <div className="space-y-2">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="h-12 rounded-lg bg-muted/50 animate-pulse border border-border/50" />
                     ))}
+                  </div>
+                ) : ticketComments.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-3">No comments yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ticketComments.map((c) => {
+                      const isCurrentUserComment = c.userId === userId;
+                      const displayName = isCurrentUserComment
+                        ? (userDisplayName ?? c.senderName ?? userEmail ?? "You")
+                        : (c.senderName ?? c.senderEmail ?? c.userId);
+                      const avatarInitial = (displayName ?? "?").charAt(0).toUpperCase();
+                      return (
+                      <div key={c.id} className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <div className={cn(
+                            "w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold",
+                            isCurrentUserComment
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-primary/10 text-primary"
+                          )}>
+                            {avatarInitial}
+                          </div>
+                          <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[140px]">
+                            {displayName}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground/60 ml-auto shrink-0">
+                            {new Date(c.createdAt).toLocaleDateString("en-US", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/80 leading-relaxed">{c.comment}</p>
+                      </div>
+                      );
+                    })}
                   </div>
                 )}
 
-                {!loadingDetailSuggestions && detailSuggestions.length > 0 && (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium px-0.5">AI Suggestions — click to use</p>
-                    {detailSuggestions.map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setDetailReplyMessage(suggestion)}
-                        className={cn(
-                          "w-full text-left p-2.5 rounded-lg border transition-all duration-150 group text-xs",
-                          "bg-background dark:bg-muted/40 border-border",
-                          "hover:border-primary/60 hover:bg-accent hover:shadow-sm",
-                          detailReplyMessage === suggestion && "border-primary bg-primary/5 dark:bg-primary/10"
-                        )}
-                      >
-                        <div className="flex items-start gap-2">
-                          <Wand2 className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <span className="text-foreground/80 group-hover:text-foreground leading-relaxed flex-1">
-                            {suggestion}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                {/* Add comment input — hidden for member role */}
+                {!isMember && (
+                <div className="pt-1 space-y-2">
+                  {/* AI Buttons */}
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Enhance Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        if (!newComment.trim()) return;
+                        setLoadingCommentEnhance(true);
+                        try {
+                          const response = await fetch('/api/agent/enhance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: newComment }),
+                          });
+                          if (response.ok) {
+                            const data = await response.json();
+                            if (data.enhancedVersions && data.enhancedVersions.length > 0) {
+                              setCommentEnhancedVersions(data.enhancedVersions);
+                              setShowCommentEnhanced(true);
+                              setShowCommentSuggestions(false);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error enhancing comment:', error);
+                        } finally {
+                          setLoadingCommentEnhance(false);
+                        }
+                      }}
+                      disabled={loadingCommentEnhance || !newComment.trim()}
+                      className={cn(
+                        "h-7 px-2.5 gap-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                        showCommentEnhanced
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                          : "bg-secondary/80 dark:bg-secondary/20 text-secondary-foreground dark:text-foreground hover:bg-secondary border border-border"
+                      )}
+                    >
+                      <Wand2 className={cn("h-3.5 w-3.5", loadingCommentEnhance && "animate-pulse")} />
+                      {loadingCommentEnhance ? "Enhancing..." : showCommentEnhanced ? "Hide" : "Enhance"}
+                    </Button>
+                    {/* AI Suggest Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        if (showCommentSuggestions) {
+                          setShowCommentSuggestions(false);
+                          return;
+                        }
+                        setShowCommentSuggestions(true);
+                        setShowCommentEnhanced(false);
+                        setLoadingCommentSuggestions(true);
+                        try {
+                          const response = await fetch('/api/agent/ticket-suggestions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              ticket: {
+                                id: detailedReview?.id,
+                                title: review.title,
+                                email: review.email,
+                                type: review.type,
+                                description: detailedReview?.description,
+                                workflowStatus: detailedReview?.workflowStatus || review.workflowStatus,
+                                priority: detailedReview?.priority || review.urgency,
+                                category: review.category,
+                                reviewed: review.reviewed,
+                              },
+                              language: getLocaleFromCookie(),
+                            }),
+                          });
+                          if (response.ok) {
+                            const data = await response.json();
+                            setCommentAiSuggestions(data.suggestions || []);
+                          }
+                        } catch (error) {
+                          console.error('Error fetching comment suggestions:', error);
+                        } finally {
+                          setLoadingCommentSuggestions(false);
+                        }
+                      }}
+                      disabled={loadingCommentSuggestions}
+                      className={cn(
+                        "h-7 px-2.5 gap-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                        showCommentSuggestions
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                          : "bg-secondary/80 dark:bg-secondary/20 text-secondary-foreground dark:text-foreground hover:bg-secondary border border-border"
+                      )}
+                    >
+                      <Sparkles className={cn("h-3.5 w-3.5", loadingCommentSuggestions && "animate-pulse")} />
+                      {loadingCommentSuggestions ? "Thinking..." : showCommentSuggestions ? "Hide AI" : "AI Suggest"}
+                    </Button>
                   </div>
+
+                  {/* AI Reply Suggestions Panel */}
+                  {showCommentSuggestions && (
+                    <div className="rounded-lg border border-border/50 bg-muted/30 dark:bg-muted/20 p-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="p-1 rounded-md bg-primary shadow-sm">
+                            <Sparkles className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground">AI Suggestions</span>
+                        </div>
+                        <button
+                          onClick={() => setShowCommentSuggestions(false)}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {loadingCommentSuggestions ? (
+                        <div className="flex gap-2">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex-1 h-16 rounded-xl bg-background/60 dark:bg-muted/40 animate-pulse border border-border/50" />
+                          ))}
+                        </div>
+                      ) : commentAiSuggestions.length > 0 ? (
+                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                          {commentAiSuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                setNewComment(suggestion);
+                                setShowCommentSuggestions(false);
+                              }}
+                              className="flex-1 min-w-[160px] max-w-[260px] p-2.5 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
+                            >
+                              <p className="line-clamp-5 text-foreground/80 group-hover:text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                {suggestion}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground text-center py-2">No suggestions available</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Enhanced Versions Panel */}
+                  {showCommentEnhanced && commentEnhancedVersions.length > 0 && (
+                    <div className="rounded-lg border border-border/50 bg-muted/30 dark:bg-muted/20 p-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="p-1 rounded-md bg-primary shadow-sm">
+                            <Wand2 className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground">Enhanced Versions</span>
+                        </div>
+                        <button
+                          onClick={() => { setShowCommentEnhanced(false); setCommentEnhancedVersions([]); }}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                        {commentEnhancedVersions.map((version, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setNewComment(version);
+                              setShowCommentEnhanced(false);
+                              setCommentEnhancedVersions([]);
+                            }}
+                            className="flex-1 min-w-[160px] max-w-[260px] p-2.5 text-left text-xs rounded-xl bg-background dark:bg-muted/60 border border-border hover:border-primary/50 hover:bg-accent transition-all duration-200 shadow-sm hover:shadow-md group"
+                          >
+                            <p className="line-clamp-5 text-foreground/80 group-hover:text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                              {version}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Textarea + Send */}
+                  <div className="flex items-center gap-2">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddTicketComment();
+                        }
+                      }}
+                      placeholder="Add a comment..."
+                      rows={1}
+                      className="flex-1 min-h-[32px] max-h-[96px] px-3 py-1.5 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 resize-none transition-shadow"
+                      disabled={submittingComment}
+                      style={{ overflow: 'hidden' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = Math.min(target.scrollHeight, 96) + 'px';
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 px-3 text-xs shrink-0"
+                      disabled={!newComment.trim() || submittingComment || !userId}
+                      onClick={handleAddTicketComment}
+                    >
+                      {submittingComment ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Send className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
                 )}
               </div>
             </div>
@@ -1359,6 +1661,7 @@ export function ReviewDetailPanel({
                             ticketTitle: review.title,
                             ticketEmail: review.email,
                           },
+                          language: getLocaleFromCookie(),
                         }),
                       });
                       if (response.ok) {
@@ -1465,6 +1768,16 @@ export function ReviewDetailPanel({
           </div>
         ) : null}
       </div>
+
+      {/* Edit Modal */}
+      <ReviewEditModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        reviewId={String(review.id)}
+        onSuccess={() => {
+          fetchReviewDetails();
+        }}
+      />
     </div>
   );
 }

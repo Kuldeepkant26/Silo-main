@@ -10,9 +10,11 @@ import { ExternalFormsList } from "~/components/external-forms-list";
 import { ExternalRequestModal } from "~/components/external-request-modal";
 import { Tags } from "~/components/tags";
 import { ROUTES } from "~/constants/routes";
+import { api } from "~/trpc/react";
 
 export default function SettingsRequestsAndReviewsPage() {
   const t = useTranslations();
+  const { data: userRole } = api.member.getCurrentUserRole.useQuery();
   const [isExternalModalOpen, setIsExternalModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("categories");
@@ -84,13 +86,15 @@ export default function SettingsRequestsAndReviewsPage() {
               </button>
             </div>
 
-            {/* CTA Button */}
-            <button 
-              className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
-              onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
-            >
-              {activeTab === "tags" ? "CREATE TAG" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
-            </button>
+            {/* CTA Button - hidden for legal role on categories tab */}
+            {!(userRole?.isLegal && activeTab === "categories") && (
+              <button 
+                className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
+                onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
+              >
+                {activeTab === "tags" ? "CREATE TAG" : activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
+              </button>
+            )}
           </div>
         </div>
       </div>

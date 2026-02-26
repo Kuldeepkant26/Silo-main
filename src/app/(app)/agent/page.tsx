@@ -9,6 +9,7 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 
+import { useTranslations } from "next-intl";
 import { Icons } from "~/components/icons";
 import { ChatSummaryModal } from "~/components/chat-summary-modal";
 import { PrepareDocModal } from "~/components/prepare-doc-modal";
@@ -190,6 +191,7 @@ function ThemePicker({
   current: AgentThemeId;
   onChange: (id: AgentThemeId) => void;
 }) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, right: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -242,20 +244,20 @@ function ThemePicker({
       {/* Header */}
       <div className="border-b px-4 py-3" style={{ borderColor: "var(--at-border)" }}>
         <p className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: "var(--at-muted)" }}>
-          Theme
+          {t("agent_theme")}
         </p>
       </div>
 
       {/* Grid */}
       <div className="grid grid-cols-3 gap-2 p-3">
-        {AGENT_THEMES.map((t) => {
-          const active = t.id === current;
+        {AGENT_THEMES.map((th) => {
+          const active = th.id === current;
           return (
             <button
-              key={t.id}
+              key={th.id}
               type="button"
               onClick={() => {
-                onChange(t.id);
+                onChange(th.id);
                 setOpen(false);
               }}
               className={cn(
@@ -268,13 +270,13 @@ function ThemePicker({
               <div
                 className="h-9 w-9 rounded-full border shadow-sm transition-transform group-hover:scale-105"
                 style={{
-                  background: t.swatch,
+                  background: th.swatch,
                   borderColor: "var(--at-border)",
                 }}
               />
               <div>
                 <p className="text-[11px] font-semibold leading-tight" style={{ color: active ? "var(--at-send-bg)" : "var(--at-muted)" }}>
-                  {t.name}
+                  {th.name}
                 </p>
               </div>
               {active && (
@@ -297,7 +299,7 @@ function ThemePicker({
         ref={btnRef}
         type="button"
         onClick={() => (open ? setOpen(false) : openPicker())}
-        title="Change theme"
+        title={t("agent_change_theme")}
         className={cn(
           "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-all",
           open
@@ -496,25 +498,27 @@ export default function AgentPage() {
   });
   const userRole = userRoleData?.role as "admin" | "owner" | "member" | "legal" | undefined;
 
+  const t = useTranslations();
+
   // Role-aware greeting text
   const greetingConfig = (() => {
-    if (!userRole) return { headline: "Good to see you.", sub: "Ask me anything." };
+    if (!userRole) return { headline: t("agent_greeting_default_headline"), sub: t("agent_greeting_default_sub") };
     if (userRole === "admin" || userRole === "owner") {
       return {
-        headline: "What can I help you with?",
-        sub: "Manage requests, categories, teams, or get insights about your organisation.",
+        headline: t("agent_greeting_admin_headline"),
+        sub: t("agent_greeting_admin_sub"),
       };
     }
     if (userRole === "legal") {
       return {
-        headline: "Ready to assist.",
-        sub: "Review documents, analyse clauses, or research legal questions.",
+        headline: t("agent_greeting_legal_headline"),
+        sub: t("agent_greeting_legal_sub"),
       };
     }
     // member
     return {
-      headline: "How can I help?",
-      sub: "Ask about your requests, track status, or get general guidance.",
+      headline: t("agent_greeting_member_headline"),
+      sub: t("agent_greeting_member_sub"),
     };
   })();
 
@@ -614,7 +618,7 @@ export default function AgentPage() {
 
   const toggleVoiceInput = useCallback(() => {
     if (!browserSupportsSpeechRecognition) {
-      toast.error("Your browser does not support speech recognition. Try Chrome or Edge.");
+      toast.error(t("agent_speech_not_supported"));
       return;
     }
 
@@ -749,14 +753,14 @@ export default function AgentPage() {
 
       const remaining = MAX_FILES - attachedFiles.length;
       if (remaining <= 0) {
-        toast.error(`Maximum ${MAX_FILES} files allowed`);
+        toast.error(t("agent_max_files", { max: MAX_FILES }));
         return;
       }
 
       const toAdd: File[] = [];
       for (const file of files.slice(0, remaining)) {
         if (file.size > MAX_FILE_SIZE) {
-          toast.error(`"${file.name}" exceeds 25 MB limit`);
+          toast.error(t("agent_file_too_large", { name: file.name }));
           continue;
         }
         if (attachedFiles.some((f) => f.name === file.name && f.size === file.size)) continue;
@@ -830,7 +834,7 @@ export default function AgentPage() {
       }
 
       setIsLoading(false);
-      toast.error("Response timed out. Please try again.");
+      toast.error(t("agent_timeout"));
     },
     [],
   );
@@ -925,7 +929,7 @@ export default function AgentPage() {
             // Chat was likely created but AI generation failed.
             // We don't have the chatId, so stop loading and show a friendly message.
             setIsLoading(false);
-            toast.error("AI is temporarily unavailable. Please try again in a moment.");
+            toast.error(t("agent_ai_unavailable"));
             setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
             return;
           }
@@ -1003,7 +1007,7 @@ export default function AgentPage() {
       );
       setHistoryOpen(false);
     } catch {
-      toast.error("Failed to load chat.");
+      toast.error(t("agent_failed_load_chat"));
     }
   };
 
@@ -1093,7 +1097,7 @@ export default function AgentPage() {
           </span>
           <span style={{ color: "var(--at-border)" }} className="select-none">·</span>
           <span className="text-[13px] font-normal select-none" style={{ color: "var(--at-muted)" }}>
-            {isLoading ? "Thinking…" : "Agent"}
+            {isLoading ? t("agent_thinking") : t("agent_label")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -1113,7 +1117,7 @@ export default function AgentPage() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
-            <span className="hidden sm:inline">New</span>
+            <span className="hidden sm:inline">{t("agent_new")}</span>
           </button>
 
           {/* History */}
@@ -1133,7 +1137,7 @@ export default function AgentPage() {
               <circle cx="12" cy="12" r="10" />
               <path d="M12 8v4l3 3" />
             </svg>
-            <span className="hidden sm:inline">History</span>
+            <span className="hidden sm:inline">{t("agent_history")}</span>
           </button>
 
           {/* Advance Dropdown */}
@@ -1156,7 +1160,7 @@ export default function AgentPage() {
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                 <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
               </svg>
-              <span className="hidden sm:inline">Advance</span>
+              <span className="hidden sm:inline">{t("agent_advance")}</span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -1191,7 +1195,7 @@ export default function AgentPage() {
                     <line x1="16" y1="17" x2="8" y2="17" />
                     <polyline points="10 9 9 9 8 9" />
                   </svg>
-                  Summary
+                  {t("agent_summary")}
                 </button>
                 {/* Prepare doc option */}
                 <button
@@ -1208,7 +1212,7 @@ export default function AgentPage() {
                     <line x1="8" y1="13" x2="16" y2="13" />
                     <line x1="8" y1="17" x2="12" y2="17" />
                   </svg>
-                  Prepare doc
+                  {t("agent_prepare_doc")}
                 </button>
               </div>
               </div>
@@ -1291,7 +1295,7 @@ export default function AgentPage() {
                             type="button"
                             onClick={() => {
                               void navigator.clipboard.writeText(msg.content);
-                              toast.success("Copied");
+                              toast.success(t("agent_copied"));
                             }}
                             className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] transition-colors"
                             style={{ color: "var(--at-muted)", opacity: 0.6 }}
@@ -1300,7 +1304,7 @@ export default function AgentPage() {
                               <rect width="14" height="14" x="8" y="8" rx="2" />
                               <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                             </svg>
-                            Copy
+                            {t("agent_copy")}
                           </button>
                         </div>
                       </div>
@@ -1341,7 +1345,7 @@ export default function AgentPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Message SILO Agent…"
+                placeholder={t("agent_message_placeholder")}
                 rows={1}
                 disabled={isLoading}
                 className="w-full resize-none border-0 bg-transparent px-4 pt-3.5 pb-1 pr-10 text-[14px] leading-relaxed outline-none ring-0 focus:ring-0 focus:outline-none disabled:opacity-50"
@@ -1450,7 +1454,7 @@ export default function AgentPage() {
                         background: listening ? "#ef4444" : "transparent",
                         boxShadow: listening ? "0 0 12px rgba(239,68,68,0.5), 0 0 4px rgba(239,68,68,0.3)" : "none",
                       }}
-                      title={listening ? "Stop listening (auto-stops after 3s of silence)" : "Voice input"}
+                      title={listening ? t("agent_stop_listening") : t("agent_voice_input")}
                     >
                       {listening ? (
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1496,7 +1500,7 @@ export default function AgentPage() {
           </form>
 
           <p className="mt-2 text-center text-[11px]" style={{ color: "var(--at-muted)", opacity: 0.5 }}>
-            SILO Agent can make mistakes. Verify important details independently.
+            {t("agent_disclaimer")}
           </p>
         </div>
       </div>
@@ -1523,9 +1527,9 @@ export default function AgentPage() {
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
         <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0" style={{ ...(theme.vars as React.CSSProperties), background: theme.vars["--at-bg"], borderLeft: `1px solid ${theme.vars["--at-border"]}`, color: theme.vars["--at-send-bg"] }}>
           <SheetHeader className="px-5 py-4" style={{ borderBottom: "1px solid var(--at-border)" }}>
-            <SheetTitle className="text-sm font-semibold" style={{ color: "var(--at-send-bg)" }}>History</SheetTitle>
+            <SheetTitle className="text-sm font-semibold" style={{ color: "var(--at-send-bg)" }}>{t("agent_history")}</SheetTitle>
             <SheetDescription className="text-xs" style={{ color: "var(--at-muted)" }}>
-              Previous conversations
+              {t("agent_previous_conversations")}
             </SheetDescription>
           </SheetHeader>
 
@@ -1533,8 +1537,8 @@ export default function AgentPage() {
             <div className="flex-1 overflow-y-auto px-3 py-3">
               {chatSessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="text-sm" style={{ color: "var(--at-muted)" }}>No conversations yet</p>
-                  <p className="mt-1 text-xs" style={{ color: "var(--at-muted)", opacity: 0.6 }}>Start a chat to see it here</p>
+                  <p className="text-sm" style={{ color: "var(--at-muted)" }}>{t("agent_no_conversations")}</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--at-muted)", opacity: 0.6 }}>{t("agent_start_chat")}</p>
                 </div>
               ) : (
                 <div className="space-y-0.5">
@@ -1567,7 +1571,7 @@ export default function AgentPage() {
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 </svg>
-                New Conversation
+                {t("agent_new_conversation")}
               </button>
             </div>
           </div>

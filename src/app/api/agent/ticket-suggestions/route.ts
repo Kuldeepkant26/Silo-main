@@ -3,6 +3,13 @@ import { z } from "zod";
 
 import { env } from "~/env";
 
+// Map locale codes to full language names for the AI prompt
+const LOCALE_TO_LANGUAGE: Record<string, string> = {
+  en: "English",
+  es: "Spanish",
+  ca: "Catalan",
+};
+
 // Request validation schema
 const ticketSuggestionsSchema = z.object({
   ticket: z.object({
@@ -16,14 +23,16 @@ const ticketSuggestionsSchema = z.object({
     category: z.string().nullable().optional(),
     reviewed: z.boolean().nullable().optional(),
   }),
+  language: z.string().optional(),
 });
 
-// System prompt for generating professional message suggestions based on ticket details
-const SYSTEM_PROMPT = `You are a multilingual professional assistant helping a reviewer generate message suggestions to send to a requester based on a support/legal ticket's details.
+// System prompt builder for generating professional message suggestions based on ticket details
+function buildTicketSystemPrompt(language: string): string {
+  return `You are a professional assistant helping a reviewer generate message suggestions to send to a requester based on a support/legal ticket's details.
 
 You will be given ticket details (title, description, status, priority, category, etc.) and should generate exactly 4 short, professional messages the reviewer could send to the requester in the chat.
 
-CRITICAL RULE: You MUST detect the language used in the ticket title and description, and ALL 4 suggestions MUST be in that SAME language. If the ticket is in Spanish, ALL suggestions must be in Spanish. If in French, ALL in French. NEVER translate to English or any other language.
+CRITICAL RULE: ALL 4 suggestions MUST be written in ${language}. Regardless of the language used in the ticket content, you MUST ALWAYS respond in ${language}.
 
 Other rules:
 - Keep each suggestion concise (1-3 sentences max)
@@ -31,10 +40,8 @@ Other rules:
 - Suggestions should cover different intents: acknowledging the request, asking for more details, providing a status update, and next steps
 - Don't use placeholders like [name] - keep it generic but relevant to the ticket context
 - Be professional and empathetic
-- Return ONLY a JSON array with 4 strings, nothing else
-
-Example: if ticket is in Spanish, output might be:
-["Gracias por enviar su solicitud. He revisado los detalles y comenzaré a procesarla en breve.", "¿Podría proporcionar documentación o detalles adicionales sobre este asunto para que podamos proceder de manera más eficiente?", "Quería informarle que su solicitud está siendo revisada por nuestro equipo.", "Hemos completado nuestra revisión inicial. El siguiente paso sería programar una discusión de seguimiento."]`;
+- Return ONLY a JSON array with 4 strings, nothing else`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +55,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { ticket } = validatedData.data;
+    const { ticket, language: localeCode } = validatedData.data;
+    const language = LOCALE_TO_LANGUAGE[localeCode ?? "en"] ?? "English";
 
     if (!env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -74,18 +82,20 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join("\n");
 
-    const userPrompt = `Here are the ticket details:\n\n${ticketDetails}\n\nGenerate 4 professional message suggestions. RESPOND IN THE SAME LANGUAGE as the ticket content — do NOT translate to English or any other language.`;
+    const userPrompt = `Here are the ticket details:\n\n${ticketDetails}\n\nGenerate 4 professional message suggestions. You MUST write ALL suggestions in ${language}.`;
+
+    const systemPrompt = buildTicketSystemPrompt(language);
 
     const contents = [
       {
         role: "user",
-        parts: [{ text: SYSTEM_PROMPT }],
+        parts: [{ text: systemPrompt }],
       },
       {
         role: "model",
         parts: [
           {
-            text: 'Understood. I will always generate suggestions in the same language as the ticket content. Please provide the ticket details.',
+            text: `Understood. I will always generate suggestions in ${language}. Please provide the ticket details.`,
           },
         ],
       },

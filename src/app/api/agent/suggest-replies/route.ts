@@ -3,6 +3,13 @@ import { z } from "zod";
 
 import { env } from "~/env";
 
+// Map locale codes to full language names for the AI prompt
+const LOCALE_TO_LANGUAGE: Record<string, string> = {
+  en: "English",
+  es: "Spanish",
+  ca: "Catalan",
+};
+
 // Request validation schema
 const suggestRepliesSchema = z.object({
   messages: z.array(
@@ -16,23 +23,23 @@ const suggestRepliesSchema = z.object({
     ticketTitle: z.string().nullable().optional(),
     ticketEmail: z.string().nullable().optional(),
   }).optional(),
+  language: z.string().optional(),
 });
 
-// System prompt for generating professional reply suggestions
-const SYSTEM_PROMPT = `You are a multilingual professional assistant helping generate reply suggestions for a support/legal ticket conversation.
+// System prompt builder for generating professional reply suggestions
+function buildRepliesSystemPrompt(language: string): string {
+  return `You are a professional assistant helping generate reply suggestions for a support/legal ticket conversation.
 Based on the conversation history, generate exactly 3 brief, professional reply suggestions that the admin/support staff could send.
 
-CRITICAL RULE: You MUST detect the language of the conversation (especially the most recent messages) and ALL 3 suggestions MUST be in that SAME language. If the conversation is in Spanish, ALL replies must be in Spanish. If in French, ALL in French. NEVER translate to English or any other language.
+CRITICAL RULE: ALL 3 suggestions MUST be written in ${language}. Regardless of the language used in the conversation, you MUST ALWAYS respond in ${language}.
 
 Other rules:
 - Keep each suggestion concise (1-2 sentences max)
 - Make them professional and helpful
 - Vary the tone slightly: one more formal, one friendly, one direct
 - Don't use placeholders like [name] - keep it generic
-- Return ONLY a JSON array with 3 strings, nothing else
-
-Example: if conversation is in Spanish, output might be:
-["Gracias por comunicarse. Revisaré su solicitud y le responderé a la brevedad.", "He recibido su mensaje y priorizaré este asunto. Espere una actualización dentro de 24 horas.", "¡Entendido! Permítame investigar esto y le daré seguimiento pronto."]`;
+- Return ONLY a JSON array with 3 strings, nothing else`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +53,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { messages, context } = validatedData.data;
+    const { messages, context, language: localeCode } = validatedData.data;
+    const language = LOCALE_TO_LANGUAGE[localeCode ?? "en"] ?? "English";
 
     if (!env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -65,16 +73,18 @@ export async function POST(request: NextRequest) {
       ? `\nTicket: ${context.ticketTitle}\nFrom: ${context.ticketEmail || "Unknown"}`
       : "";
 
-    const userPrompt = `Here is the conversation:${contextInfo}\n\n${conversationText}\n\nGenerate 3 professional reply suggestions for the admin to send next. RESPOND IN THE SAME LANGUAGE as the conversation — do NOT translate to English or any other language.`;
+    const userPrompt = `Here is the conversation:${contextInfo}\n\n${conversationText}\n\nGenerate 3 professional reply suggestions for the admin to send next. You MUST write ALL suggestions in ${language}.`;
+
+    const systemPrompt = buildRepliesSystemPrompt(language);
 
     const contents = [
       {
         role: "user",
-        parts: [{ text: SYSTEM_PROMPT }],
+        parts: [{ text: systemPrompt }],
       },
       {
         role: "model",
-        parts: [{ text: 'Understood. I will always generate replies in the same language as the conversation. Please provide the conversation.' }],
+        parts: [{ text: `Understood. I will always generate replies in ${language}. Please provide the conversation.` }],
       },
       {
         role: "user",

@@ -674,6 +674,7 @@ export function MyRequestsList() {
           review={selectedRequest}
           onClose={handleCloseDetailPanel}
           onNavigate={handleNavigateRequest}
+          hideReply={true}
         />
       )}
     </div>

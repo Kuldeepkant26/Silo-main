@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslations } from "next-intl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ interface DocTemplate {
 
 // ─── Document Templates ───────────────────────────────────────────────────────
 
-function getTemplates(sendBg: string, muted: string): DocTemplate[] {
+function getTemplates(sendBg: string, muted: string, t: (key: string) => string): DocTemplate[] {
   const s = (d: string) => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={sendBg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       {d.split("|").map((p, i) => <path key={i} d={p} />)}
@@ -62,81 +63,81 @@ function getTemplates(sendBg: string, muted: string): DocTemplate[] {
   return [
     {
       id: "nda",
-      name: "NDA",
-      description: "Non-Disclosure Agreement with full legal clauses",
-      badge: "Legal",
+      name: t("doc_tpl_nda"),
+      description: t("doc_tpl_nda_desc"),
+      badge: t("doc_badge_legal"),
       badgeColor: "#7c3aed",
       icon: s("M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"),
     },
     {
       id: "contract",
-      name: "Service Contract",
-      description: "Professional service agreement with payment terms",
-      badge: "Legal",
+      name: t("doc_tpl_service_contract"),
+      description: t("doc_tpl_service_contract_desc"),
+      badge: t("doc_badge_legal"),
       badgeColor: "#7c3aed",
       icon: s("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z|M14 2v6h6|M16 13H8|M16 17H8|M10 9H8"),
     },
     {
       id: "proposal",
-      name: "Business Proposal",
-      description: "Persuasive proposal with scope, timeline & pricing",
-      badge: "Business",
+      name: t("doc_tpl_business_proposal"),
+      description: t("doc_tpl_business_proposal_desc"),
+      badge: t("doc_badge_business"),
       badgeColor: "#0891b2",
       icon: s("M3 3h18v18H3z|M3 9h18|M9 21V9"),
     },
     {
       id: "report",
-      name: "Report",
-      description: "Structured business or research report",
-      badge: "Business",
+      name: t("doc_tpl_report"),
+      description: t("doc_tpl_report_desc"),
+      badge: t("doc_badge_business"),
       badgeColor: "#0891b2",
       icon: s("M18 20V10|M12 20V4|M6 20v-6"),
     },
     {
       id: "minutes",
-      name: "Meeting Minutes",
-      description: "Formal meeting record with action items",
-      badge: "Meetings",
+      name: t("doc_tpl_meeting_minutes"),
+      description: t("doc_tpl_meeting_minutes_desc"),
+      badge: t("doc_badge_meetings"),
       badgeColor: "#059669",
       icon: s("M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2|M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8|M23 21v-2a4 4 0 0 0-3-3.87|M16 3.13a4 4 0 0 1 0 7.75"),
     },
     {
       id: "email",
-      name: "Professional Email",
-      description: "Formal email or letter draft",
-      badge: "Comms",
+      name: t("doc_tpl_professional_email"),
+      description: t("doc_tpl_professional_email_desc"),
+      badge: t("doc_badge_comms"),
       badgeColor: "#d97706",
       icon: s("M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z|M22 6l-10 7L2 6"),
     },
     {
       id: "legal",
-      name: "Legal Brief",
-      description: "Formal legal brief with structured arguments",
-      badge: "Legal",
+      name: t("doc_tpl_legal_brief"),
+      description: t("doc_tpl_legal_brief_desc"),
+      badge: t("doc_badge_legal"),
       badgeColor: "#7c3aed",
       icon: s("M3 6h18|M7 12h10|M10 18h4"),
     },
     {
       id: "terms-of-service",
-      name: "Terms of Service",
-      description: "Complete ToS / EULA for digital products",
-      badge: "Legal",
+      name: t("doc_tpl_terms_of_service"),
+      description: t("doc_tpl_terms_of_service_desc"),
+      badge: t("doc_badge_legal"),
       badgeColor: "#7c3aed",
       icon: s("M9 11l3 3L22 4|M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"),
     },
     {
       id: "sow",
-      name: "Statement of Work",
-      description: "Detailed SOW with scope, deliverables & timeline",
-      badge: "Projects",
+      name: t("doc_tpl_statement_of_work"),
+      description: t("doc_tpl_statement_of_work_desc"),
+      badge: t("doc_badge_projects"),
       badgeColor: "#0891b2",
       icon: s("M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2|M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2|M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2|M9 12h6|M9 16h4"),
     },
     {
       id: "custom",
-      name: "Custom Document",
-      description: "Describe any document and AI will build it",
-      badge: "Custom",
+      name: t("doc_tpl_custom"),
+      description: t("doc_tpl_custom_desc"),
+      badge: t("doc_badge_custom"),
       badgeColor: "#e11d48",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={sendBg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -397,15 +398,15 @@ function generateDocId(): string {
 
 // ─── AI Suggestion chip ───────────────────────────────────────────────────────
 
-const QUICK_SUGGESTIONS = [
-  "Make it more concise",
-  "Add an executive summary",
-  "Use more formal language",
-  "Add placeholders for names & dates",
-  "Expand the clauses with more detail",
-  "Fix grammar & spelling",
-  "Add a table of contents",
-  "Make tone more persuasive",
+const QUICK_SUGGESTION_KEYS = [
+  "doc_suggestion_concise",
+  "doc_suggestion_summary",
+  "doc_suggestion_formal",
+  "doc_suggestion_placeholders",
+  "doc_suggestion_expand",
+  "doc_suggestion_grammar",
+  "doc_suggestion_toc",
+  "doc_suggestion_persuasive",
 ];
 
 // ─── PrepareDocModal ──────────────────────────────────────────────────────────
@@ -417,6 +418,7 @@ export function PrepareDocModal({
   themeVars,
   chatId,
 }: PrepareDocModalProps) {
+  const t = useTranslations();
   /* ── theme ──────────────────────────────────────────────────────────────── */
   const bg = themeVars["--at-bg"] || "#ffffff";
   const borderColor = themeVars["--at-border"] || "rgba(0,0,0,0.08)";
@@ -427,7 +429,7 @@ export function PrepareDocModal({
   const inputBg = themeVars["--at-input-bg"] || "#ffffff";
   const toolbarBg = bg === "#ffffff" ? "#f0f0f0" : bg.startsWith("rgba") ? "#f0f0f0" : bg;
 
-  const TEMPLATES = useMemo(() => getTemplates(sendBg, muted), [sendBg, muted]);
+  const TEMPLATES = useMemo(() => getTemplates(sendBg, muted, t), [sendBg, muted, t]);
 
   /* ── state ──────────────────────────────────────────────────────────────── */
   const [step, setStep] = useState<ModalStep>("template");
@@ -612,7 +614,7 @@ export function PrepareDocModal({
         return updated;
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate document");
+      setError(err instanceof Error ? err.message : t("doc_failed_generate"));
     } finally {
       setLoading(false);
     }
@@ -650,7 +652,7 @@ export function PrepareDocModal({
       setRefinementInput("");
       if (viewMode === "edit") setViewMode("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refine document");
+      setError(err instanceof Error ? err.message : t("doc_failed_refine"));
     } finally {
       setRefining(false);
       setAiThinking(false);
@@ -773,7 +775,7 @@ export function PrepareDocModal({
       await navigator.clipboard.writeText(md);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { setError("Failed to copy"); }
+    } catch { setError(t("doc_failed_copy")); }
   }, [doc, viewMode]);
 
   /* ── Download PDF ───────────────────────────────────────────────────────── */
@@ -801,7 +803,7 @@ export function PrepareDocModal({
         .save();
       document.body.removeChild(container);
     } catch {
-      setError("PDF generation failed. Downloading markdown instead.");
+      setError(t("doc_pdf_fallback"));
       const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -830,7 +832,7 @@ export function PrepareDocModal({
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      setError("Failed to download Word document.");
+      setError(t("doc_failed_word"));
     } finally {
       setDownloading(null);
     }
@@ -919,6 +921,17 @@ export function PrepareDocModal({
           style={{ borderBottom: `1px solid ${borderColor}` }}
         >
           <div className="flex items-center gap-3">
+            {step === "editor" && selectedTemplate && (
+              <button
+                type="button"
+                onClick={handleChangeTemplate}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all hover:opacity-70"
+                style={{ background: accent, border: `1px solid ${borderColor}` }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={sendBg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><polyline points="12 19 5 12 12 5" /></svg>
+              </button>
+            )}
+            {step === "template" && (
             <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: accent }}>
               {/* Document icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={sendBg} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -928,31 +941,21 @@ export function PrepareDocModal({
                 <line x1="8" y1="17" x2="12" y2="17" />
               </svg>
             </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold" style={{ color: sendBg }}>
-                  {step === "template" ? "Prepare Document" : (selectedTemplate?.name ?? "Document")}
+                  {step === "template" ? t("doc_prepare_document") : (selectedTemplate?.name ?? t("doc_document"))}
                 </h2>
-                {step === "editor" && selectedTemplate && (
-                  <button
-                    type="button"
-                    onClick={handleChangeTemplate}
-                    className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium transition-all hover:opacity-70"
-                    style={{ background: accent, color: muted, border: `1px solid ${borderColor}` }}
-                  >
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-                    Change
-                  </button>
-                )}
               </div>
               <p className="text-[11px]" style={{ color: muted }}>
                 {step === "template"
-                  ? "Choose a document template to get started"
+                  ? t("doc_choose_template")
                   : loading
-                    ? "AI is generating your document\u2026"
+                    ? t("doc_generating")
                     : refining
-                      ? "AI is applying changes\u2026"
-                      : `${stats.words} words \u00B7 ~${stats.readMin} min read`}
+                      ? t("doc_applying_changes")
+                      : `${stats.words} ${t("doc_words")} \u00B7 ~${stats.readMin} ${t("doc_min_read")}`}
               </p>
             </div>
           </div>
@@ -966,7 +969,7 @@ export function PrepareDocModal({
                   className="rounded-md px-3 text-[11px] font-medium transition-all"
                   style={{ background: viewMode === "preview" ? sendBg : "transparent", color: viewMode === "preview" ? sendText : muted }}
                 >
-                  Preview
+                  {t("doc_preview")}
                 </button>
                 <button
                   type="button"
@@ -974,7 +977,7 @@ export function PrepareDocModal({
                   className="rounded-md px-3 text-[11px] font-medium transition-all"
                   style={{ background: viewMode === "edit" ? sendBg : "transparent", color: viewMode === "edit" ? sendText : muted }}
                 >
-                  Edit
+                  {t("doc_edit")}
                 </button>
               </div>
             )}
@@ -995,7 +998,7 @@ export function PrepareDocModal({
                 <rect x="1" y="3" width="22" height="5" />
                 <line x1="10" y1="12" x2="14" y2="12" />
               </svg>
-              <span className="hidden sm:inline">Archive</span>
+              <span className="hidden sm:inline">{t("doc_archive")}</span>
               {archivedDocs.length > 0 && (
                 <span
                   className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold"
@@ -1019,7 +1022,7 @@ export function PrepareDocModal({
         {/* ── Step indicator ───────────────────────────────────────────────── */}
         {step === "editor" && (
           <div className="shrink-0 flex items-center gap-2 px-5 pt-2.5 pb-0 sm:px-6">
-            {[{ label: "1. Template", done: true }, { label: "2. Generate & Edit", done: false }].map((s, i) => (
+            {[{ label: t("doc_step_template"), done: true }, { label: t("doc_step_generate"), done: false }].map((s, i) => (
               <div key={i} className="flex items-center gap-1.5">
                 {i > 0 && <div className="h-px w-5" style={{ background: borderColor }} />}
                 <div className="flex items-center gap-1">
@@ -1087,7 +1090,7 @@ export function PrepareDocModal({
               {/* Custom prompt / additional context */}
               <div className="mt-4">
                 <label className="mb-1.5 block text-[11px] font-medium" style={{ color: muted }}>
-                  Additional instructions <span style={{ opacity: 0.5 }}>(optional — applied to any template)</span>
+                  {t("doc_additional_instructions")} <span style={{ opacity: 0.5 }}>({t("doc_optional_applied")})</span>
                 </label>
                 <textarea
                   value={customPrompt}
@@ -1104,9 +1107,9 @@ export function PrepareDocModal({
                 <p className="text-[11px]" style={{ color: muted }}>
                   {pendingTemplate
                     ? pendingTemplate.id === "custom"
-                      ? <span>Ready — <strong style={{ color: sendBg }}>Custom Document</strong> will open a blank editor</span>
-                      : <span>Ready to generate <strong style={{ color: sendBg }}>{pendingTemplate.name}</strong> using AI</span>
-                    : <span style={{ opacity: 0.6 }}>Select a template above to continue</span>}
+                      ? <span>{t("doc_ready_custom", { name: pendingTemplate.name })}</span>
+                      : <span>{t("doc_ready_generate", { name: pendingTemplate.name })}</span>
+                    : <span style={{ opacity: 0.6 }}>{t("doc_select_template")}</span>}
                 </p>
                 <button
                   type="button"
@@ -1118,12 +1121,12 @@ export function PrepareDocModal({
                   {pendingTemplate?.id === "custom" ? (
                     <>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                      Open Editor
+                      {t("doc_open_editor")}
                     </>
                   ) : (
                     <>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" /></svg>
-                      Generate with AI
+                      {t("doc_generate_with_ai")}
                     </>
                   )}
                 </button>
@@ -1140,10 +1143,10 @@ export function PrepareDocModal({
                     <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-current border-t-transparent" style={{ color: sendBg, opacity: 0.3 }} />
                     <div className="absolute inset-0 h-12 w-12 animate-spin rounded-full border-[3px] border-transparent border-t-current" style={{ color: sendBg, animationDuration: "0.8s" }} />
                   </div>
-                  <p className="text-sm font-medium" style={{ color: sendBg }}>Generating your {selectedTemplate?.name ?? "document"}&hellip;</p>
-                  <p className="mt-1 text-xs" style={{ color: muted }}>AI is analysing context and building the document</p>
+                  <p className="text-sm font-medium" style={{ color: sendBg }}>{t("doc_generating_your", { name: selectedTemplate?.name ?? t("doc_document") })}</p>
+                  <p className="mt-1 text-xs" style={{ color: muted }}>{t("doc_ai_analysing")}</p>
                   {messages.length > 0 && (
-                    <p className="mt-0.5 text-[11px]" style={{ color: muted, opacity: 0.6 }}>Using {messages.length} conversation messages as context</p>
+                    <p className="mt-0.5 text-[11px]" style={{ color: muted, opacity: 0.6 }}>{t("doc_using_messages", { count: messages.length })}</p>
                   )}
                 </div>
               ) : error && !doc ? (
@@ -1152,7 +1155,7 @@ export function PrepareDocModal({
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                   </div>
                   <p className="text-sm font-medium" style={{ color: sendBg }}>{error}</p>
-                  <button type="button" onClick={() => selectedTemplate && void generateDocument(selectedTemplate)} className="mt-4 rounded-lg px-4 py-2 text-xs font-medium transition-all hover:opacity-90" style={{ background: sendBg, color: sendText }}>Try Again</button>
+                  <button type="button" onClick={() => selectedTemplate && void generateDocument(selectedTemplate)} className="mt-4 rounded-lg px-4 py-2 text-xs font-medium transition-all hover:opacity-90" style={{ background: sendBg, color: sendText }}>{t("doc_try_again")}</button>
                 </div>
               ) : viewMode === "edit" ? (
                 /* ── WYSIWYG Edit Mode ────────────────────────────────────── */
@@ -1244,7 +1247,7 @@ export function PrepareDocModal({
                   <rect x="1" y="3" width="22" height="5" />
                   <line x1="10" y1="12" x2="14" y2="12" />
                 </svg>
-                <span className="text-[13px] font-semibold" style={{ color: sendBg }}>Archived Docs</span>
+                <span className="text-[13px] font-semibold" style={{ color: sendBg }}>{t("doc_archived_docs")}</span>
                 <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: accent, color: muted }}>{archivedDocs.length}</span>
               </div>
               <button type="button" onClick={() => setArchiveOpen(false)} className="flex h-6 w-6 items-center justify-center rounded-md" style={{ color: muted }}>
@@ -1262,8 +1265,8 @@ export function PrepareDocModal({
                       <line x1="10" y1="12" x2="14" y2="12" />
                     </svg>
                   </div>
-                  <p className="text-[12px] font-medium" style={{ color: sendBg }}>No archived docs yet</p>
-                  <p className="mt-1 text-[11px]" style={{ color: muted, opacity: 0.6 }}>Docs auto-save here as you create them</p>
+                  <p className="text-[12px] font-medium" style={{ color: sendBg }}>{t("doc_no_archived")}</p>
+                  <p className="mt-1 text-[11px]" style={{ color: muted, opacity: 0.6 }}>{t("doc_auto_save")}</p>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -1317,7 +1320,7 @@ export function PrepareDocModal({
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm("Clear all archived documents? This cannot be undone.")) {
+                    if (window.confirm(t("doc_clear_confirm"))) {
                       setArchivedDocs([]);
                       saveArchive([]);
                     }
@@ -1326,7 +1329,7 @@ export function PrepareDocModal({
                   style={{ color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.05)" }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>
-                  Clear All
+                  {t("doc_clear_all")}
                 </button>
               </div>
             )}
@@ -1355,7 +1358,7 @@ export function PrepareDocModal({
                     <path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <span style={{ color: muted }}>AI is updating your document</span>
+                <span style={{ color: muted }}>{t("doc_ai_updating")}</span>
                 <span className="flex gap-0.5 ml-1">
                   {[0, 1, 2].map((i) => (
                     <span key={i} className="pd-thinking-dot inline-block h-1 w-1 rounded-full" style={{ background: muted, animationDelay: `${i * 0.2}s` }} />
@@ -1367,17 +1370,20 @@ export function PrepareDocModal({
             {/* ── Quick suggestion chips ──────────────────────────────── */}
             {showSuggestions && (
               <div className="mb-2.5 flex flex-wrap gap-1.5">
-                {QUICK_SUGGESTIONS.map((s) => (
+                {QUICK_SUGGESTION_KEYS.map((key) => {
+                  const label = t(key);
+                  return (
                   <button
-                    key={s}
+                    key={key}
                     type="button"
-                    onClick={() => { setRefinementInput(s); setShowSuggestions(false); refinementRef.current?.focus(); }}
+                    onClick={() => { setRefinementInput(label); setShowSuggestions(false); refinementRef.current?.focus(); }}
                     className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all hover:opacity-80 active:scale-95"
                     style={{ background: accent, color: muted, border: `1px solid ${borderColor}` }}
                   >
-                    {s}
+                    {label}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -1401,7 +1407,7 @@ export function PrepareDocModal({
                 value={refinementInput}
                 onChange={(e) => setRefinementInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleRefinement(); } }}
-                placeholder='Ask AI to change anything\u2026 e.g. "Add a penalty clause" or "Make it friendlier"'
+                placeholder={t("doc_refinement_placeholder")}
                 disabled={refining}
                 className="flex-1 border-0 bg-transparent px-3 py-2.5 text-[13px] outline-none placeholder:opacity-40 disabled:opacity-50"
                 style={{ color: sendBg, caretColor: sendBg }}
@@ -1425,12 +1431,12 @@ export function PrepareDocModal({
                 {/* Regenerate */}
                 <button type="button" onClick={() => selectedTemplate && void generateDocument(selectedTemplate)} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium transition-all hover:opacity-80" style={{ border: `1px solid ${borderColor}`, color: muted }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-                  Regenerate
+                  {t("doc_regenerate")}
                 </button>
                 {/* Print */}
                 <button type="button" onClick={handlePrint} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium transition-all hover:opacity-80" style={{ border: `1px solid ${borderColor}`, color: muted }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  Print
+                  {t("doc_print")}
                 </button>
               </div>
 
@@ -1440,7 +1446,7 @@ export function PrepareDocModal({
                   {copied
                     ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>}
-                  {copied ? "Copied!" : "Copy"}
+                  {copied ? t("doc_copied") : t("doc_copy")}
                 </button>
 
                 {/* Download Word */}
@@ -1454,7 +1460,7 @@ export function PrepareDocModal({
                   {downloading === "word"
                     ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /></svg>}
-                  {downloading === "word" ? "Exporting\u2026" : "Word"}
+                  {downloading === "word" ? t("doc_exporting") : t("doc_word")}
                 </button>
 
                 {/* Download PDF */}
@@ -1468,7 +1474,7 @@ export function PrepareDocModal({
                   {downloading === "pdf"
                     ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
-                  {downloading === "pdf" ? "Generating\u2026" : "Download PDF"}
+                  {downloading === "pdf" ? t("doc_generating_pdf") : t("doc_download_pdf")}
                 </button>
               </div>
             </div>

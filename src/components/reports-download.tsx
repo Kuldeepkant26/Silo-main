@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useTranslations } from "next-intl";
+
 import { env } from "~/env";
 import { getSessionAuthHeader } from "~/lib/api-auth";
 import { authClient } from "~/server/auth/client";
@@ -15,6 +17,7 @@ const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
 type ReportFormat = "excel" | "pdf";
 
 export function ReportsDownload() {
+  const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const [loadingFormat, setLoadingFormat] = useState<ReportFormat | null>(null);
 
@@ -69,7 +72,7 @@ export function ReportsDownload() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-muted-foreground hidden sm:block">Download report:</span>
+      <span className="text-sm text-muted-foreground hidden sm:block">{t("download_report")}</span>
       <Button
         variant="outline"
         size="sm"

@@ -313,6 +313,7 @@
   "doc_word": "Word",
   "doc_generating_pdf": "Generating…",
   "doc_download_pdf": "Download PDF",
+  "download_report": "Download report:",
   "doc_failed_generate": "Failed to generate document",
   "doc_failed_refine": "Failed to refine document",
   "doc_failed_copy": "Failed to copy",

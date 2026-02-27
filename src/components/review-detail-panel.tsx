@@ -996,7 +996,7 @@ export function ReviewDetailPanel({
                   className="h-6 w-6"
                   onClick={fetchTicketComments}
                   disabled={loadingComments}
-                  title="Refresh comments"
+                  title={t("refresh_comments")}
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5", loadingComments && "animate-spin")} />
                 </Button>
@@ -1091,7 +1091,7 @@ export function ReviewDetailPanel({
                       )}
                     >
                       <Wand2 className={cn("h-3.5 w-3.5", loadingCommentEnhance && "animate-pulse")} />
-                      {loadingCommentEnhance ? "Enhancing..." : showCommentEnhanced ? "Hide" : "Enhance"}
+                      {loadingCommentEnhance ? t("enhancing") : showCommentEnhanced ? t("hide") : t("enhance")}
                     </Button>
                     {/* AI Suggest Button */}
                     <Button
@@ -1143,7 +1143,7 @@ export function ReviewDetailPanel({
                       )}
                     >
                       <Sparkles className={cn("h-3.5 w-3.5", loadingCommentSuggestions && "animate-pulse")} />
-                      {loadingCommentSuggestions ? "Thinking..." : showCommentSuggestions ? "Hide AI" : "AI Suggest"}
+                      {loadingCommentSuggestions ? t("thinking") : showCommentSuggestions ? t("hide_ai") : t("ai_suggest")}
                     </Button>
                   </div>
 
@@ -1155,7 +1155,7 @@ export function ReviewDetailPanel({
                           <div className="p-1 rounded-md bg-primary shadow-sm">
                             <Sparkles className="h-3 w-3 text-primary-foreground" />
                           </div>
-                          <span className="text-[11px] font-semibold text-foreground">AI Suggestions</span>
+                          <span className="text-[11px] font-semibold text-foreground">{t("ai_suggestions")}</span>
                         </div>
                         <button
                           onClick={() => setShowCommentSuggestions(false)}
@@ -1241,7 +1241,7 @@ export function ReviewDetailPanel({
                           handleAddTicketComment();
                         }
                       }}
-                      placeholder="Add a comment..."
+                      placeholder={t("add_a_comment")}
                       rows={1}
                       className="flex-1 min-h-[32px] max-h-[96px] px-3 py-1.5 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 resize-none transition-shadow"
                       disabled={submittingComment}
@@ -1274,7 +1274,7 @@ export function ReviewDetailPanel({
           <div className="flex flex-col h-full bg-gradient-to-b from-muted/50 to-background rounded-xl">
             {/* Chat Header with Refresh */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
-              <span className="text-xs text-muted-foreground">Messages</span>
+              <span className="text-xs text-muted-foreground">{t("messages")}</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1305,7 +1305,7 @@ export function ReviewDetailPanel({
                   }
                 }}
                 disabled={loadingMessages}
-                title="Refresh messages"
+                title={t("refresh_messages")}
               >
                 <RefreshCw className={cn("h-3.5 w-3.5", loadingMessages && "animate-spin")} />
               </Button>
@@ -1332,8 +1332,8 @@ export function ReviewDetailPanel({
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 shadow-inner">
                     <Send className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Start the conversation below</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("no_messages_yet")}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">{t("start_conversation_below")}</p>
                 </div>
               ) : (
                 <div className="space-y-3 px-1">
@@ -1430,7 +1430,7 @@ export function ReviewDetailPanel({
                     <div className="p-1 rounded-md bg-primary shadow-sm">
                       <Sparkles className="h-3 w-3 text-primary-foreground" />
                     </div>
-                    <span className="text-[11px] font-semibold text-foreground">AI Suggestions</span>
+                    <span className="text-[11px] font-semibold text-foreground">{t("ai_suggestions")}</span>
                   </div>
                   <button
                     onClick={() => setShowSuggestions(false)}
@@ -1633,7 +1633,7 @@ export function ReviewDetailPanel({
                   )}
                 >
                   <Wand2 className={cn("h-3.5 w-3.5", loadingEnhance && "animate-pulse")} />
-                  {loadingEnhance ? "Enhancing..." : showEnhanced ? "Hide" : "Enhance"}
+                  {loadingEnhance ? t("enhancing") : showEnhanced ? t("hide") : t("enhance")}
                 </Button>
                 {/* AI Suggest Button */}
                 <Button
@@ -1683,7 +1683,7 @@ export function ReviewDetailPanel({
                   )}
                 >
                   <Sparkles className={cn("h-3.5 w-3.5", loadingSuggestions && "animate-pulse")} />
-                  {loadingSuggestions ? "Thinking..." : showSuggestions ? "Hide AI" : "AI Suggest"}
+                  {loadingSuggestions ? t("thinking") : showSuggestions ? t("hide_ai") : t("ai_suggest")}
                 </Button>
               </div>
               <div className="flex items-center gap-2">
@@ -1708,7 +1708,7 @@ export function ReviewDetailPanel({
                       ? "text-primary border-primary/30 bg-primary/5 hover:bg-primary/10"
                       : "text-muted-foreground border-border hover:text-foreground hover:bg-muted"
                   )}
-                  title={chatAttachments.length >= MAX_FILES_COUNT ? `Max ${MAX_FILES_COUNT} files` : "Attach files"}
+                  title={chatAttachments.length >= MAX_FILES_COUNT ? t("max_files", { count: MAX_FILES_COUNT }) : t("attach_files")}
                 >
                   {chatUploading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1730,7 +1730,7 @@ export function ReviewDetailPanel({
                         }
                       }
                     }}
-                    placeholder="Type your message..."
+                    placeholder={t("type_your_message")}
                     rows={1}
                     className="w-full h-10 min-h-[40px] max-h-[120px] px-4 py-2.5 rounded-xl border border-border bg-background dark:bg-muted focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 placeholder:text-muted-foreground resize-none text-sm leading-tight"
                     disabled={sendingMessage}
@@ -1762,7 +1762,7 @@ export function ReviewDetailPanel({
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                Press Enter to send • Shift + Enter for new line
+                {t("press_enter_to_send")}
               </p>
             </div>
           </div>

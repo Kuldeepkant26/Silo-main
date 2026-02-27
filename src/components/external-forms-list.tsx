@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 
@@ -34,6 +35,7 @@ interface ExternalFormsListProps {
 }
 
 export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
+  const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
   const authHeader = getSessionAuthHeader(auth);
@@ -189,7 +191,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
     // Link to the external request flow with slug and title
     const link = `${window.location.origin}/external-request?title=${encodeURIComponent(form.name)}&slug=${encodeURIComponent(form.slug)}`;
     navigator.clipboard.writeText(link);
-    showToast("Link copied to clipboard!");
+    showToast(t("link_copied"));
     setOpenMenuId(null);
   };
 
@@ -219,7 +221,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
               <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-700" />
               <div className="absolute inset-0 rounded-full border-2 border-black dark:border-white border-t-transparent dark:border-t-transparent animate-spin" />
             </div>
-            <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">Loading forms...</span>
+            <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">{t("loading_forms")}</span>
           </div>
         </div>
       </div>
@@ -236,8 +238,8 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
             </svg>
           </div>
         </div>
-        <p className="text-lg font-bold text-black dark:text-white mb-1">No external request forms yet</p>
-        <p className="text-neutral-500 dark:text-neutral-400 text-sm">Click &quot;NEW EXTERNAL REQUEST&quot; to create your first form</p>
+        <p className="text-lg font-bold text-black dark:text-white mb-1">{t("no_external_forms_yet")}</p>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm">{t("click_new_external")}</p>
       </div>
     );
   }
@@ -269,7 +271,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M11 6H10V4C10 2.34 8.66 1 7 1C5.34 1 4 2.34 4 4V6H3C2.45 6 2 6.45 2 7V12C2 12.55 2.45 13 3 13H11C11.55 13 12 12.55 12 12V7C12 6.45 11.55 6 11 6ZM7 10C6.45 10 6 9.55 6 9C6 8.45 6.45 8 7 8C7.55 8 8 8.45 8 9C8 9.55 7.55 10 7 10ZM5.1 6V4C5.1 2.95 5.95 2.1 7 2.1C8.05 2.1 8.9 2.95 8.9 4V6H5.1Z" fill="currentColor"/>
                   </svg>
-                  {form.reviewerId ? "External request" : "No reviewer assigned"}
+                  {form.reviewerId ? t("external_request") : t("no_reviewer_assigned")}
                 </span>
               </div>
               {/* Three-dot Menu */}
@@ -291,7 +293,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                       className="block w-full py-3 px-4 bg-transparent border-none text-left text-sm text-destructive cursor-pointer transition-colors hover:bg-destructive/10"
                       onClick={() => openDeleteModal(form.id, form.name)}
                     >
-                      Delete
+                      {t("delete")}
                     </button>
                     <div className="relative">
                       <button
@@ -303,11 +305,11 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                         onClick={() => form.reviewerId && handleCopyLink(form)}
                         disabled={!form.reviewerId}
                       >
-                        Copy link
+                        {t("copy_link")}
                       </button>
                       {!form.reviewerId && (
                         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 invisible peer-hover:visible flex items-center whitespace-nowrap rounded-md bg-neutral-900 dark:bg-neutral-100 px-2.5 py-1.5 text-xs text-white dark:text-neutral-900 shadow-md z-[9999]">
-                          Assign reviewer before copying
+                          {t("assign_reviewer_before_copying")}
                           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100" />
                         </div>
                       )}
@@ -342,7 +344,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                     backgroundPosition: "right 16px center",
                   }}
                 >
-                  <option value="">Reviewer</option>
+                  <option value="">{t("reviewer")}</option>
                   {reviewers.map((reviewer) => (
                     <option key={reviewer.id} value={reviewer.id}>
                       {reviewer.name}
@@ -360,7 +362,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                     <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
                     <circle cx="8" cy="8" r="3" fill="currentColor"/>
                   </svg>
-                  Automatic replies
+                  {t("automatic_replies")}
                 </span>
               </div>
             )}
@@ -380,10 +382,10 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
               </div>
             </div>
             <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
-              End of forms
+              {t("end_of_forms")}
             </p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
-              {forms.length} {forms.length === 1 ? "form" : "forms"} configured
+              {t("forms_configured", { count: forms.length })}
             </p>
           </div>
         )}
@@ -412,9 +414,9 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
             
             {/* Content */}
             <div className="text-center mb-8">
-              <h3 className="text-xl font-bold text-foreground mb-2">Delete Form</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">{t("delete_form")}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Are you sure you want to delete <span className="font-semibold text-foreground">"{deleteModal.formName}"</span>? This action cannot be undone.
+                {t("confirm_delete", { name: deleteModal.formName })}
               </p>
             </div>
             
@@ -425,7 +427,7 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 className="flex-1 py-3 px-4 bg-primary border-2 border-primary rounded-xl text-sm font-semibold text-primary-foreground cursor-pointer transition-all hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -438,10 +440,10 @@ export function ExternalFormsList({ refreshTrigger }: ExternalFormsListProps) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Deleting...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Delete"
+                  t("delete")
                 )}
               </button>
             </div>

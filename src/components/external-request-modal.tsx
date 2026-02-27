@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 
@@ -15,6 +16,7 @@ interface ExternalRequestModalProps {
 }
 
 export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: ExternalRequestModalProps) {
+  const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
   const authHeader = getSessionAuthHeader(auth);
@@ -66,7 +68,7 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
         onFormCreated();
       }
     } catch (err) {
-      setError("Failed to create request form. Please try again.");
+      setError(t("failed_create_form"));
       console.error("Error creating form:", err);
     } finally {
       setIsLoading(false);
@@ -95,11 +97,11 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
       <div className="bg-card rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] max-w-[520px] w-[90%] m-5 animate-in slide-in-from-bottom-5 zoom-in-95 duration-300">
         <div className="p-12 pb-12">
           <h2 className="text-2xl font-semibold text-foreground mb-3 leading-tight tracking-tight">
-            Create a new external request form
+            {t("create_new_external_form")}
           </h2>
           
           <p className="text-base text-muted-foreground mb-7 font-normal leading-relaxed">
-            Please create a title for your request
+            {t("external_form_description")}
           </p>
 
           <input
@@ -112,12 +114,12 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
           />
 
           <p className="text-sm text-[#6b7280] leading-relaxed mt-6 mb-6">
-            External requests are submitted by external users who need to open a request, such as a reclaim.
+            {t("external_requests_help_text")}
           </p>
 
           {/* Auto Reply Toggle */}
           <div className="flex items-center justify-between py-3 border-t border-border">
-            <span className="text-sm font-medium text-foreground">Enable Auto Reply</span>
+            <span className="text-sm font-medium text-foreground">{t("enable_auto_reply")}</span>
             <button
               type="button"
               className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
@@ -137,11 +139,11 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
           {autoReplyEnabled && (
             <div className="mt-4">
               <label className="text-sm font-medium text-foreground mb-2 block">
-                Auto Reply Message
+                {t("auto_reply_message")}
               </label>
               <textarea
                 className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 font-[system-ui] bg-background placeholder:text-muted-foreground hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] resize-none min-h-[100px]"
-                placeholder="Enter the auto-reply message..."
+                placeholder={t("auto_reply_placeholder")}
                 value={autoReplyMessage}
                 onChange={(e) => setAutoReplyMessage(e.target.value)}
               />
@@ -158,14 +160,14 @@ export function ExternalRequestModal({ isOpen, onClose, onFormCreated }: Externa
               onClick={handleCancel}
               disabled={isLoading}
             >
-              CANCEL
+              {t("cancel").toUpperCase()}
             </button>
             <button
               className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-primary bg-primary text-primary-foreground uppercase hover:bg-primary/90 hover:border-primary/90 active:bg-primary active:transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
               disabled={!title.trim() || isLoading}
             >
-              {isLoading ? "SAVING..." : "SAVE"}
+              {isLoading ? t("saving") : t("save").toUpperCase()}
             </button>
           </div>
         </div>

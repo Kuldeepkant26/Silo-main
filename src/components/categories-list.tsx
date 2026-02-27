@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
 import { api } from "~/trpc/react";
@@ -40,6 +41,7 @@ interface CategoriesListProps {
 }
 
 export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
+  const t = useTranslations();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
   const authHeader = getSessionAuthHeader(auth);
@@ -234,13 +236,13 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
       if (response.ok) {
         await fetchCategories();
         closeEditModal();
-        showToast("Category updated successfully");
+        showToast(t("category_updated"));
       } else {
-        setEditError("Failed to update category. Please try again.");
+        setEditError(t("failed_update_category"));
       }
     } catch (error) {
       console.error("Error updating category:", error);
-      setEditError("Failed to update category. Please try again.");
+      setEditError(t("failed_update_category"));
     } finally {
       setIsUpdatingEdit(false);
     }
@@ -312,7 +314,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-700" />
               <div className="absolute inset-0 rounded-full border-2 border-indigo-600 dark:border-indigo-400 border-t-transparent dark:border-t-transparent animate-spin" />
             </div>
-            <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Loading categories...</span>
+            <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{t("loading_categories")}</span>
           </div>
         </div>
       </div>
@@ -329,8 +331,8 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             </svg>
           </div>
         </div>
-        <p className="text-lg font-bold text-black dark:text-white mb-1">No categories yet</p>
-        <p className="text-neutral-500 dark:text-neutral-400 text-sm">Click &quot;CREATE CATEGORY&quot; to create your first category</p>
+        <p className="text-lg font-bold text-black dark:text-white mb-1">{t("no_categories_yet")}</p>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm">{t("click_create_category")}</p>
       </div>
     );
   }
@@ -378,7 +380,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                     <path d="M7 1a6 6 0 0 1 0 12M7 1a6 6 0 0 0 0 12" stroke="currentColor" strokeWidth="1.5"/>
                     <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5"/>
                   </svg>
-                  Available to everyone
+                  {t("available_to_everyone")}
                 </span>
               )}
               
@@ -406,7 +408,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        Edit
+                        {t("edit")}
                       </span>
                     </button>
                     <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-2" />
@@ -418,7 +420,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        Delete
+                        {t("delete")}
                       </span>
                     </button>
                   </div>
@@ -432,7 +434,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             {/* Card Body - Reviewer Dropdown */}
             <div className="mb-4">
               <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mb-2 block">
-                Assigned Reviewer
+                {t("assigned_reviewer")}
               </label>
               <div className="relative max-w-[320px]">
                 {updatingReviewerId === category.id && (
@@ -461,7 +463,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                       backgroundPosition: "right 16px center",
                     }}
                   >
-                    <option value="">Select Reviewer</option>
+                    <option value="">{t("select_reviewer")}</option>
                     {reviewers.map((reviewer) => (
                       <option key={reviewer.id} value={reviewer.id}>
                         {reviewer.name}
@@ -482,8 +484,8 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 block">Automatic Replies Enabled</span>
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">Auto-responding to requests</span>
+                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 block">{t("automatic_replies_enabled")}</span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">{t("auto_responding_requests")}</span>
                 </div>
                 <div className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50" />
               </div>
@@ -504,10 +506,10 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               </div>
             </div>
             <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
-              End of categories
+              {t("end_of_categories")}
             </p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
-              {categories.length} {categories.length === 1 ? "category" : "categories"} configured
+              {t("categories_configured", { count: categories.length })}
             </p>
           </div>
         )}
@@ -536,9 +538,9 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
             
             {/* Content */}
             <div className="text-center mb-8">
-              <h3 className="text-xl font-bold text-foreground mb-2">Delete Category</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">{t("delete_category")}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Are you sure you want to delete <span className="font-semibold text-foreground">"{deleteModal.categoryName}"</span>? This action cannot be undone.
+                {t("confirm_delete", { name: deleteModal.categoryName })}
               </p>
             </div>
             
@@ -549,7 +551,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 className="flex-1 py-3 px-4 bg-primary border-2 border-primary rounded-xl text-sm font-semibold text-primary-foreground cursor-pointer transition-all hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -562,10 +564,10 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Deleting...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Delete"
+                  t("delete")
                 )}
               </button>
             </div>
@@ -583,28 +585,28 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
           <div className="relative bg-card rounded-2xl shadow-2xl max-w-[520px] w-full mx-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="p-10">
               <h2 className="text-2xl font-semibold text-foreground mb-2 leading-tight tracking-tight">
-                Edit Category
+                {t("edit_category")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                Update the details for this category
+                {t("update_category_details")}
               </p>
 
               {/* Category Name */}
               <div className="mb-5">
-                <label className="text-sm font-medium text-foreground mb-2 block">Category Name</label>
+                <label className="text-sm font-medium text-foreground mb-2 block">{t("category_name")}</label>
                 <input
                   type="text"
                   className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background placeholder:text-muted-foreground hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Category name"
+                  placeholder={t("category_name_edit_placeholder")}
                   disabled={isUpdatingEdit}
                 />
               </div>
 
               {/* Assigned Team Dropdown */}
               <div className="mb-5">
-                <label className="text-sm font-medium text-foreground mb-2 block">Assign to Team (Optional)</label>
+                <label className="text-sm font-medium text-foreground mb-2 block">{t("assign_to_team_optional")}</label>
                 <div className="relative">
                   <select
                     className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background cursor-pointer appearance-none pr-10 hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -617,7 +619,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                       backgroundPosition: "right 16px center",
                     }}
                   >
-                    <option value="">Available to Everyone</option>
+                    <option value="">{t("available_to_everyone")}</option>
                     {(teams ?? []).map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -637,7 +639,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
 
               {/* Reviewer Dropdown */}
               <div className="mb-5">
-                <label className="text-sm font-medium text-foreground mb-2 block">Reviewer</label>
+                <label className="text-sm font-medium text-foreground mb-2 block">{t("reviewer")}</label>
                 <div className="relative">
                   <select
                     className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background cursor-pointer appearance-none pr-10 hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -650,7 +652,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                       backgroundPosition: "right 16px center",
                     }}
                   >
-                    <option value="">Select Reviewer</option>
+                    <option value="">{t("select_reviewer")}</option>
                     {reviewers.map((reviewer) => (
                       <option key={reviewer.id} value={reviewer.id}>
                         {reviewer.name} ({reviewer.email})
@@ -662,7 +664,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
 
               {/* Auto Reply Toggle */}
               <div className="flex items-center justify-between py-3 border-t border-border">
-                <span className="text-sm font-medium text-foreground">Enable Auto Reply</span>
+                <span className="text-sm font-medium text-foreground">{t("enable_auto_reply")}</span>
                 <button
                   type="button"
                   className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${editAutoReplyEnabled ? "bg-primary" : "bg-muted"}`}
@@ -678,10 +680,10 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
               {/* Auto Reply Message */}
               {editAutoReplyEnabled && (
                 <div className="mt-4">
-                  <label className="text-sm font-medium text-foreground mb-2 block">Auto Reply Message</label>
+                  <label className="text-sm font-medium text-foreground mb-2 block">{t("auto_reply_message")}</label>
                   <textarea
                     className="w-full px-[18px] py-4 text-[15px] text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all duration-200 bg-background placeholder:text-muted-foreground hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.08)] resize-none min-h-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Enter the auto-reply message..."
+                    placeholder={t("auto_reply_placeholder")}
                     value={editAutoReplyMessage}
                     onChange={(e) => setEditAutoReplyMessage(e.target.value)}
                     disabled={isUpdatingEdit}
@@ -699,7 +701,7 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                   onClick={closeEditModal}
                   disabled={isUpdatingEdit}
                 >
-                  CANCEL
+                  {t("cancel").toUpperCase()}
                 </button>
                 <button
                   className="px-8 py-[14px] text-[13px] font-semibold tracking-[0.5px] rounded-[28px] cursor-pointer transition-all duration-200 border-[1.5px] border-primary bg-primary text-primary-foreground uppercase hover:bg-primary/90 hover:border-primary/90 active:bg-primary active:transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -712,10 +714,10 @@ export function CategoriesList({ refreshTrigger }: CategoriesListProps) {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      SAVING...
+                      {t("saving")}
                     </>
                   ) : (
-                    "SAVE"
+                    t("save").toUpperCase()
                   )}
                 </button>
               </div>

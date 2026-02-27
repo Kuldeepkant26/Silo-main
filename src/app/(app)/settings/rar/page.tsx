@@ -61,7 +61,7 @@ export default function SettingsRequestsAndReviewsPage() {
                 className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "categories" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
                 onClick={() => setActiveTab("categories")}
               >
-                Categories
+                {t("categories")}
                 {activeTab === "categories" && (
                   <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
                 )}
@@ -70,7 +70,7 @@ export default function SettingsRequestsAndReviewsPage() {
                 className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "tags" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
                 onClick={() => setActiveTab("tags")}
               >
-                Tags
+                {t("tags")}
                 {activeTab === "tags" && (
                   <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
                 )}
@@ -79,7 +79,7 @@ export default function SettingsRequestsAndReviewsPage() {
                 className={`py-3 px-1 bg-transparent border-none text-base font-medium cursor-pointer relative transition-colors ${activeTab === "external" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
                 onClick={() => setActiveTab("external")}
               >
-                External
+                {t("external")}
                 {activeTab === "external" && (
                   <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-foreground" />
                 )}
@@ -92,7 +92,7 @@ export default function SettingsRequestsAndReviewsPage() {
                 className="py-3 px-6 bg-primary text-primary-foreground border-none rounded-lg text-sm font-semibold tracking-[0.5px] cursor-pointer transition-colors hover:bg-primary/90 whitespace-nowrap"
                 onClick={activeTab === "external" ? handleCreateExternal : activeTab === "categories" ? handleCreateCategory : undefined}
               >
-                {activeTab === "external" ? "NEW EXTERNAL REQUEST" : "CREATE CATEGORY"}
+                {activeTab === "external" ? t("new_external_request") : t("create_category")}
               </button>
             )}
           </div>

@@ -12,6 +12,7 @@ import { ROUTES } from "~/constants/routes";
 import { authClient } from "~/server/auth/client";
 import { Logo } from "./logo";
 import { Spinner } from "./spinner";
+import { AuthLanguageSwitcher } from "./auth-language-switcher";
 
 // Constants
 const STEPS = {
@@ -467,9 +468,7 @@ export function UserRegistrationFlow() {
 
       {/* Footer */}
       <footer className="flex items-center justify-between px-5 sm:px-8 md:px-[60px] py-4 shrink-0">
-        <button className="bg-transparent border-none text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-          English
-        </button>
+        <AuthLanguageSwitcher />
         <button className="w-8 h-8 rounded-full border border-border bg-background text-muted-foreground text-sm font-medium cursor-pointer hover:bg-muted">
           ?
         </button>

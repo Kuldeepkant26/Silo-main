@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { ForgotPassword } from "~/components/forgot-password";
 import { Logo } from "~/components/logo";
+import { AuthLanguageSwitcher } from "~/components/auth-language-switcher";
 import { ROUTES } from "~/constants/routes";
 
 export default function ForgotPasswordPage() {
@@ -57,9 +58,7 @@ export default function ForgotPasswordPage() {
 
       {/* Footer */}
       <footer className="flex items-center justify-between px-5 sm:px-8 md:px-[60px] py-4 shrink-0">
-        <button className="bg-transparent border-none text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-          English
-        </button>
+        <AuthLanguageSwitcher />
         <button className="w-8 h-8 rounded-full border border-border bg-background text-muted-foreground text-sm font-medium cursor-pointer hover:bg-muted">
           ?
         </button>

@@ -96,7 +96,7 @@ export function MultiSelect<T>({
           <CommandGroup>
             {options.map((option) => (
               <CommandItem
-                key={option.label}
+                key={option.value}
                 value={option.label}
                 onSelect={() => handleSelect(option.value)}
               >

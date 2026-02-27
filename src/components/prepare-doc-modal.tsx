@@ -1096,7 +1096,7 @@ export function PrepareDocModal({
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
                   rows={2}
-                  placeholder='e.g. "This is for a SaaS product. Include GDPR clause and use formal UK English."'
+                  placeholder={t("doc_instructions_placeholder")}
                   className="w-full resize-none rounded-xl px-4 py-2.5 text-[13px] outline-none placeholder:opacity-40"
                   style={{ background: inputBg, border: `1.5px solid ${borderColor}`, color: sendBg, caretColor: sendBg }}
                 />

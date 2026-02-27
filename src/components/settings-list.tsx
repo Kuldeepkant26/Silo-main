@@ -14,13 +14,13 @@ export function SettingsList() {
       {/* Header Section */}
       <div className="flex flex-col gap-2">
         <p className="text-[13px] tracking-[0.08em] uppercase text-muted-foreground font-bold">
-          Settings overview
+          {t("settings_overview")}
         </p>
         <h2 className="text-[28px] font-bold text-foreground">
-          Manage how SILO runs for your team
+          {t("settings_overview_title")}
         </h2>
         <p className="text-muted-foreground text-[15px] max-w-[720px] leading-[1.5]">
-          Quick access to the most common legal operations controls. Each tile opens the detailed controls for that area.
+          {t("settings_overview_desc")}
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export function SettingsList() {
                 {/* Card Action */}
                 <div className="inline-flex items-center gap-2.5 text-foreground">
                   <span className="bg-muted rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.04em] text-muted-foreground">
-                    Open
+                    {t("open")}
                   </span>
                   <Icons.chevronRight className="h-6 w-6" />
                 </div>

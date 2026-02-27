@@ -17,8 +17,11 @@ import { AuthLanguageSwitcher } from "./auth-language-switcher";
 // Constants
 const STEPS = {
   YOU: 1,
-  SECURITY: 2,
+  VERIFY_EMAIL: 2,
+  SECURITY: 3,
 };
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export function UserRegistrationFlow() {
   const router = useRouter();
@@ -33,7 +36,12 @@ export function UserRegistrationFlow() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // Step 2: Security
+  // Step 2: OTP Verification
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Step 3: Security
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,6 +65,20 @@ export function UserRegistrationFlow() {
     }
   }, [searchParams]);
 
+  // Start resend cooldown timer
+  const startResendCooldown = () => {
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   // Navigation helpers
   const goToNextStep = () => {
     if (currentStep < STEPS.SECURITY) {
@@ -76,6 +98,7 @@ export function UserRegistrationFlow() {
       setCurrentStep(currentStep - 1);
       // Go to last substep of previous step
       if (currentStep - 1 === STEPS.YOU) setSubStep(1);
+      else if (currentStep - 1 === STEPS.VERIFY_EMAIL) setSubStep(1);
       else if (currentStep - 1 === STEPS.SECURITY) setSubStep(2);
     }
   };
@@ -89,10 +112,85 @@ export function UserRegistrationFlow() {
   };
 
   // Form handlers
-  const handleUserInfoSubmit = (e: React.FormEvent) => {
+  const handleUserInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && firstName && lastName) {
+    if (!email || !firstName || !lastName) return;
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error ?? "Failed to send verification code.");
+        setIsLoading(false);
+        return;
+      }
+      setOtp("");
+      setOtpError("");
+      startResendCooldown();
       goToNextStep();
+    } catch {
+      toast.error("Failed to send verification code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) {
+      setOtpError("Please enter the 6-digit code.");
+      return;
+    }
+    setOtpError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setOtpError(json.error ?? "Invalid code. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      goToNextStep();
+    } catch {
+      setOtpError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, resend: true }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error ?? "Failed to resend code.");
+        setIsLoading(false);
+        return;
+      }
+      setOtp("");
+      setOtpError("");
+      startResendCooldown();
+      toast.success("A new verification code has been sent.");
+    } catch {
+      toast.error("Failed to resend code. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -204,6 +302,10 @@ export function UserRegistrationFlow() {
         You
       </span>
       <span className="text-muted-foreground">→</span>
+      <span className={`text-sm sm:text-base font-medium transition-colors ${currentStep === STEPS.VERIFY_EMAIL ? "text-foreground underline underline-offset-4" : currentStep > STEPS.VERIFY_EMAIL ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
+        Verify Email
+      </span>
+      <span className="text-muted-foreground">→</span>
       <span className={`text-sm sm:text-base font-medium transition-colors ${currentStep === STEPS.SECURITY ? "text-foreground underline underline-offset-4" : "text-muted-foreground/60"}`}>
         Security
       </span>
@@ -211,6 +313,15 @@ export function UserRegistrationFlow() {
   );
 
   // Illustrations
+  const renderEmailIllustration = () => (
+    <div className="hidden md:flex h-80 w-80 items-center justify-center rounded-[20px]">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
+        <rect x="10" y="25" width="80" height="55" rx="6" />
+        <path d="M10 31l40 28 40-28" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+
   const renderUserIllustration = () => (
     <div className="hidden md:flex h-80 w-80 items-center justify-center rounded-[20px]">
       <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-44 w-44 text-foreground">
@@ -294,7 +405,82 @@ export function UserRegistrationFlow() {
       );
     }
 
-    // Step 2: Security
+    // Step 2: Verify Email (OTP)
+    if (currentStep === STEPS.VERIFY_EMAIL) {
+      return (
+        <>
+          <div className="flex-1 max-w-[520px] w-full md:pl-10">
+            <button
+              onClick={() => setCurrentStep(STEPS.YOU)}
+              className="inline-flex items-center gap-2 bg-transparent border-none text-sm sm:text-base font-medium text-green-600 cursor-pointer p-0 mb-4 transition-colors hover:text-green-700"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <h1 className="text-2xl sm:text-[28px] md:text-[32px] font-semibold text-foreground mb-2.5 tracking-tight leading-tight">
+              Verify your email
+            </h1>
+            <p className="text-base text-muted-foreground mb-7 leading-relaxed">
+              We sent a 6-digit code to <strong>{email}</strong>. Enter it below
+              to continue.
+            </p>
+
+            <form onSubmit={handleOtpSubmit} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15px] font-medium text-foreground">Verification code</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  className="w-full px-5 py-4 text-center text-2xl tracking-[0.5em] font-mono text-foreground border-[1.5px] border-border rounded-[10px] outline-none transition-all bg-background hover:border-muted-foreground focus:border-foreground focus:shadow-[0_0_0_3px_rgba(var(--foreground),0.06)]"
+                  value={otp}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setOtp(val);
+                    if (otpError) setOtpError("");
+                  }}
+                  placeholder="000000"
+                  required
+                  autoFocus
+                />
+                {otpError && (
+                  <p className="text-sm text-red-500">{otpError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={otp.length !== 6 || isLoading}
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 text-[13px] font-semibold tracking-[1.5px] uppercase text-primary-foreground bg-primary border-none rounded-full cursor-pointer transition-all w-fit hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+                >
+                  {isLoading && <Spinner className="h-4 w-4" />}
+                  VERIFY
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-6 text-sm text-muted-foreground">
+              Didn&apos;t receive a code?{" "}
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={resendCooldown > 0 || isLoading}
+                className="bg-transparent border-none text-sm font-medium text-green-600 cursor-pointer p-0 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+              </button>
+            </p>
+          </div>
+          {renderEmailIllustration()}
+        </>
+      );
+    }
+
+    // Step 3: Security
     if (currentStep === STEPS.SECURITY) {
       // Sub-step 1: Set password
       if (subStep === 1) {

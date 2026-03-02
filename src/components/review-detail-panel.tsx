@@ -662,7 +662,7 @@ export function ReviewDetailPanel({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-background border-l border-border shadow-xl z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl bg-background border-l border-border shadow-xl z-50 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-2">

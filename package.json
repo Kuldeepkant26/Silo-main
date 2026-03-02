@@ -95,5 +95,19 @@
   "ct3aMetadata": {
     "initVersion": "7.39.3"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "@tailwindcss/oxide",
+      "core-js",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ],
+    "ignoredBuiltDependencies": [
+      "core-js"
+    ]
+  },
   "packageManager": "pnpm@10.5.0"
 }

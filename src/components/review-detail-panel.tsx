@@ -1050,8 +1050,7 @@ export function ReviewDetailPanel({
                   </div>
                 )}
 
-                {/* Add comment input — hidden for member role */}
-                {!isMember && (
+                {/* Add comment input */}
                 <div className="pt-1 space-y-2">
                   {/* AI Buttons */}
                   <div className="flex items-center justify-end gap-2">
@@ -1266,7 +1265,6 @@ export function ReviewDetailPanel({
                     </Button>
                   </div>
                 </div>
-                )}
               </div>
             </div>
           </div>

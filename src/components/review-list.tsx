@@ -355,7 +355,7 @@ export function ReviewList() {
     if (!urgency) {
       return (
         <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 font-medium px-3 py-1 rounded-md min-w-[70px] justify-center">
-          NOT SET
+          {t("not_set_badge")}
         </Badge>
       );
     }
@@ -430,7 +430,7 @@ export function ReviewList() {
             fetchTickets();
           }}
         >
-          Retry
+          {t("retry")}
         </Button>
       </div>
     );
@@ -458,12 +458,12 @@ export function ReviewList() {
             onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, sourceType: value === "all" ? "" : value }))}
           >
             <SelectTrigger className="w-[120px] rounded-full border-[#ccc]">
-              <SelectValue placeholder="Source" />
+              <SelectValue placeholder={t("source")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="INTERNAL">Internal</SelectItem>
-              <SelectItem value="EXTERNAL">External</SelectItem>
+              <SelectItem value="all">{t("all_sources")}</SelectItem>
+              <SelectItem value="INTERNAL">{t("internal")}</SelectItem>
+              <SelectItem value="EXTERNAL">{t("external_source")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -473,13 +473,13 @@ export function ReviewList() {
             onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, priority: value === "all" ? "" : value }))}
           >
             <SelectTrigger className="w-[120px] rounded-full border-[#ccc]">
-              <SelectValue placeholder="Priority" />
+              <SelectValue placeholder={t("priority")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
-              <SelectItem value="MID">Medium</SelectItem>
-              <SelectItem value="LOW">Low</SelectItem>
+              <SelectItem value="all">{t("all_priority")}</SelectItem>
+              <SelectItem value="HIGH">{t("high")}</SelectItem>
+              <SelectItem value="MID">{t("medium")}</SelectItem>
+              <SelectItem value="LOW">{t("low")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -489,15 +489,15 @@ export function ReviewList() {
             onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, status: value === "all" ? "" : value }))}
           >
             <SelectTrigger className="w-[130px] rounded-full border-[#ccc]">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="OPEN">Open</SelectItem>
-              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-              <SelectItem value="DONE">Done</SelectItem>
-              <SelectItem value="OVERDUE">Overdue</SelectItem>
-              <SelectItem value="REOPEN">Reopen</SelectItem>
+              <SelectItem value="all">{t("all_status")}</SelectItem>
+              <SelectItem value="OPEN">{t("status_open")}</SelectItem>
+              <SelectItem value="IN_PROGRESS">{t("status_in_progress")}</SelectItem>
+              <SelectItem value="DONE">{t("status_done")}</SelectItem>
+              <SelectItem value="OVERDUE">{t("status_overdue")}</SelectItem>
+              <SelectItem value="REOPEN">{t("status_reopen")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -508,10 +508,10 @@ export function ReviewList() {
               onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}
             >
               <SelectTrigger className="w-[140px] rounded-full border-[#ccc]">
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder={t("category")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("all_categories")}</SelectItem>
                 {uniqueCategories.map((cat) => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
@@ -525,12 +525,12 @@ export function ReviewList() {
             onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewed: value === "all" ? "" : value }))}
           >
             <SelectTrigger className="w-[130px] rounded-full border-[#ccc]">
-              <SelectValue placeholder="Reviewed" />
+              <SelectValue placeholder={t("reviewed_label")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="true">Reviewed</SelectItem>
-              <SelectItem value="false">Not Reviewed</SelectItem>
+              <SelectItem value="all">{t("all")}</SelectItem>
+              <SelectItem value="true">{t("reviewed_label")}</SelectItem>
+              <SelectItem value="false">{t("not_reviewed")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -541,10 +541,10 @@ export function ReviewList() {
               onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewer: value === "all" ? "" : value }))}
             >
               <SelectTrigger className="w-[150px] rounded-full border-[#ccc]">
-                <SelectValue placeholder="Reviewer" />
+                <SelectValue placeholder={t("reviewer")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Reviewers</SelectItem>
+                <SelectItem value="all">{t("all_reviewers")}</SelectItem>
                 {activeReviewers.map((reviewer) => (
                   <SelectItem key={reviewer.id} value={reviewer.id}>
                     {reviewer.name}
@@ -563,7 +563,7 @@ export function ReviewList() {
               className="text-muted-foreground hover:text-foreground"
             >
               <Icons.close className="h-4 w-4 mr-1" />
-              Clear
+              {t("clear")}
             </Button>
           )}
 
@@ -598,14 +598,14 @@ export function ReviewList() {
           <TableHeader>
             <TableRow className="bg-card hover:bg-card border-b">
               <TableHead className="w-12"></TableHead>
-              <TableHead className="font-bold text-foreground">Source</TableHead>
-              <TableHead className="font-bold text-foreground">Title</TableHead>
-              <TableHead className="font-bold text-foreground">Email</TableHead>
-              <TableHead className="font-bold text-foreground">Category</TableHead>
-              <TableHead className="font-bold text-foreground">Created At</TableHead>
-              <TableHead className="font-bold text-foreground">Priority</TableHead>
-              <TableHead className="font-bold text-foreground">Status</TableHead>
-              <TableHead className="font-bold text-foreground">Reviewed</TableHead>
+              <TableHead className="font-bold text-foreground">{t("source")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("title")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("email")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("category")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("created_at")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("priority")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("status")}</TableHead>
+              <TableHead className="font-bold text-foreground">{t("reviewed_label")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -652,11 +652,11 @@ export function ReviewList() {
                     {item.reviewed ? (
                       <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                         <Icons.checkCircle className="h-3 w-3 mr-1" />
-                        Yes
+                        {t("yes")}
                       </Badge>
                     ) : (
                       <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                        No
+                        {t("no")}
                       </Badge>
                     )}
                   </TableCell>

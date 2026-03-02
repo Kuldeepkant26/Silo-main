@@ -338,7 +338,7 @@ export function MyRequestsList() {
             fetchTickets();
           }}
         >
-          Retry
+          {t("retry")}
         </Button>
       </div>
     );
@@ -360,18 +360,18 @@ export function MyRequestsList() {
             {unresolvedCount}
           </p>
           <p className="text-sm font-medium text-white/60 dark:text-black/60 mt-1">
-            Unresolved {unresolvedCount === 1 ? "request" : "requests"}
+            {t("unresolved")} {unresolvedCount === 1 ? t("request_s") : t("requests_plural")}
           </p>
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <span className="text-xs text-white/40 dark:text-black/40 font-medium uppercase tracking-wider">
-              Awaiting legal
+              {t("awaiting_legal")}
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="h-3.5 w-3.5 text-white/30 dark:text-black/30 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Requests pending legal review</p>
+                <p>{t("requests_pending_legal_review")}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -382,18 +382,18 @@ export function MyRequestsList() {
             {filteredItems.length}
           </p>
           <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mt-1">
-            Total {filteredItems.length === 1 ? "request" : "requests"}
+            {t("total")} {filteredItems.length === 1 ? t("request_s") : t("requests_plural")}
           </p>
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-wider">
-              {requestItems.filter((i) => i.workflowStatus === "DONE").length} completed
+              {requestItems.filter((i) => i.workflowStatus === "DONE").length} {t("completed_count")}
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500 cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Total and completed requests</p>
+                <p>{t("total_and_completed_requests")}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -416,7 +416,7 @@ export function MyRequestsList() {
         {/* Sort / Date */}
         <Select value={sortOrder} onValueChange={(value: SortOrder) => setSortOrder(value)}>
           <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-            <span>Date</span>
+            <span>{t("date")}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="newest">{t("newest_first")}</SelectItem>
@@ -430,10 +430,10 @@ export function MyRequestsList() {
           onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}
         >
           <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white data-[placeholder]:text-black dark:data-[placeholder]:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-            <span>Category</span>
+            <span>{t("category")}</span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t("all_categories")}</SelectItem>
             {uniqueCategories.map((cat) => (
               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
             ))}
@@ -446,15 +446,15 @@ export function MyRequestsList() {
           onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, status: value === "all" ? "" : value }))}
         >
           <SelectTrigger className="w-auto gap-1.5 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white data-[placeholder]:text-black dark:data-[placeholder]:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-            <span>Status</span>
+            <span>{t("status")}</span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="OPEN">Open</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="DONE">Done</SelectItem>
-            <SelectItem value="OVERDUE">Overdue</SelectItem>
-            <SelectItem value="REOPEN">Reopen</SelectItem>
+            <SelectItem value="all">{t("all_status")}</SelectItem>
+            <SelectItem value="OPEN">{t("status_open")}</SelectItem>
+            <SelectItem value="IN_PROGRESS">{t("status_in_progress")}</SelectItem>
+            <SelectItem value="DONE">{t("status_done")}</SelectItem>
+            <SelectItem value="OVERDUE">{t("status_overdue")}</SelectItem>
+            <SelectItem value="REOPEN">{t("status_reopen")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -465,34 +465,34 @@ export function MyRequestsList() {
               variant="outline"
               className="rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-black dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors gap-1.5 h-auto"
             >
-              More filters
+              {t("more_filters")}
               <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={() => setSelectedFilters(prev => ({ ...prev, priority: prev.priority === "HIGH" ? "" : "HIGH" }))}>
               <span className={cn(selectedFilters.priority === "HIGH" && "font-bold")}>
-                High Priority
+                {t("high_priority")}
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSelectedFilters(prev => ({ ...prev, priority: prev.priority === "MID" ? "" : "MID" }))}>
               <span className={cn(selectedFilters.priority === "MID" && "font-bold")}>
-                Medium Priority
+                {t("medium_priority")}
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSelectedFilters(prev => ({ ...prev, priority: prev.priority === "LOW" ? "" : "LOW" }))}>
               <span className={cn(selectedFilters.priority === "LOW" && "font-bold")}>
-                Low Priority
+                {t("low_priority")}
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSelectedFilters(prev => ({ ...prev, sourceType: prev.sourceType === "INTERNAL" ? "" : "INTERNAL" }))}>
               <span className={cn(selectedFilters.sourceType === "INTERNAL" && "font-bold")}>
-                Internal Only
+                {t("internal_only")}
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSelectedFilters(prev => ({ ...prev, sourceType: prev.sourceType === "EXTERNAL" ? "" : "EXTERNAL" }))}>
               <span className={cn(selectedFilters.sourceType === "EXTERNAL" && "font-bold")}>
-                External Only
+                {t("external_only")}
               </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -507,7 +507,7 @@ export function MyRequestsList() {
             className="text-muted-foreground hover:text-foreground rounded-full"
           >
             <Icons.close className="h-3.5 w-3.5 mr-1" />
-            Clear filters
+            {t("clear_filters")}
           </Button>
         )}
       </div>
@@ -526,16 +526,16 @@ export function MyRequestsList() {
         ) : (
           filteredItems.map((item, index) => {
             const priorityMap: Record<string, { label: string; dot: string }> = {
-              HIGH: { label: "High", dot: "bg-white" },
-              MID: { label: "Medium", dot: "bg-neutral-400" },
-              LOW: { label: "Low", dot: "bg-neutral-600" },
+              HIGH: { label: t("high"), dot: "bg-white" },
+              MID: { label: t("medium"), dot: "bg-neutral-400" },
+              LOW: { label: t("low"), dot: "bg-neutral-600" },
             };
             const statusMap: Record<string, { label: string; classes: string }> = {
-              OPEN: { label: "Open", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
-              IN_PROGRESS: { label: "In Progress", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
-              DONE: { label: "Done", classes: "border-neutral-300 dark:border-neutral-600 bg-black dark:bg-white text-white dark:text-black" },
-              OVERDUE: { label: "Overdue", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
-              REOPEN: { label: "Reopened", classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              OPEN: { label: t("status_open"), classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              IN_PROGRESS: { label: t("status_in_progress"), classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              DONE: { label: t("status_done"), classes: "border-neutral-300 dark:border-neutral-600 bg-black dark:bg-white text-white dark:text-black" },
+              OVERDUE: { label: t("status_overdue"), classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
+              REOPEN: { label: t("status_reopen"), classes: "border-neutral-300 dark:border-neutral-600 text-black dark:text-white" },
             };
             const priority = item.urgency ? priorityMap[item.urgency] : null;
             const status = item.workflowStatus ? statusMap[item.workflowStatus] : null;
@@ -589,7 +589,7 @@ export function MyRequestsList() {
 
                     {/* Row 2: Title */}
                     <h3 className="text-lg sm:text-xl font-bold text-black dark:text-white leading-tight line-clamp-2 mb-1.5 group-hover:tracking-[-0.01em] transition-all duration-300">
-                      {item.title || "Untitled request"}
+                      {item.title || t("untitled_request")}
                     </h3>
 
                     {/* Row 3: Email */}
@@ -606,13 +606,13 @@ export function MyRequestsList() {
                       <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
                         <div className="flex items-center gap-1.5">
                           <Scale className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600" />
-                          <span className="text-neutral-400 dark:text-neutral-500">Legal:</span>
+                          <span className="text-neutral-400 dark:text-neutral-500">{t("legal")}:</span>
                           <span className="font-medium text-neutral-700 dark:text-neutral-300">{item.legalName || "—"}</span>
                         </div>
                         <div className="hidden sm:block h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
                         <div className="flex items-center gap-1.5">
                           <User className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600" />
-                          <span className="text-neutral-400 dark:text-neutral-500">Reviewer:</span>
+                          <span className="text-neutral-400 dark:text-neutral-500">{t("reviewer")}:</span>
                           <span className="font-medium text-neutral-700 dark:text-neutral-300">{item.reviewerName || "—"}</span>
                         </div>
                       </div>
@@ -658,10 +658,10 @@ export function MyRequestsList() {
               </div>
             </div>
             <p className="text-sm font-semibold text-black dark:text-white mb-0.5 animate-fade-in-up-delay-1">
-              End of results
+              {t("end_of_results")}
             </p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 animate-fade-in-up-delay-2">
-              {filteredItems.length} {filteredItems.length === 1 ? "request" : "requests"} displayed
+              {filteredItems.length} {filteredItems.length === 1 ? t("request_s") : t("requests_plural")} {t("displayed")}
             </p>
           </div>
         )}

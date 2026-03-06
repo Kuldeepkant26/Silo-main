@@ -343,20 +343,35 @@ interface ChatSession {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-        style={{ border: "1px solid var(--at-s-ring)", background: "var(--at-bg)" }}
-      >
-        <span className="text-[11px] font-bold tracking-tighter select-none" style={{ color: "var(--at-send-bg)" }}>S</span>
+    <div className="flex items-start gap-3 silo-msg-enter">
+      {/* Avatar with expanding pulse ring */}
+      <div className="relative mt-0.5 shrink-0">
+        <span
+          className="silo-ai-pulse-ring"
+          style={{ borderColor: "var(--at-s-ring)" }}
+        />
+        <div
+          className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full"
+          style={{ border: "1px solid var(--at-s-ring)", background: "var(--at-bg)" }}
+        >
+          <span className="text-[11px] font-bold tracking-tighter select-none" style={{ color: "var(--at-send-bg)" }}>S</span>
+        </div>
       </div>
-      <div
-        className="flex items-center gap-1 rounded-2xl px-4 py-3"
-        style={{ border: "1px solid var(--at-border)", background: "var(--at-accent)" }}
-      >
-        <span className="silo-typing-dot" style={{ animationDelay: "0ms" }} />
-        <span className="silo-typing-dot" style={{ animationDelay: "150ms" }} />
-        <span className="silo-typing-dot" style={{ animationDelay: "300ms" }} />
+
+      {/* Bouncing dots – floating freely, no box */}
+      <div className="flex items-center gap-2 mt-2">
+        <span
+          className="silo-typing-dot"
+          style={{ background: "var(--at-send-bg)", animationDelay: "0ms" }}
+        />
+        <span
+          className="silo-typing-dot"
+          style={{ background: "var(--at-send-bg)", animationDelay: "160ms" }}
+        />
+        <span
+          className="silo-typing-dot"
+          style={{ background: "var(--at-send-bg)", animationDelay: "320ms" }}
+        />
       </div>
     </div>
   );

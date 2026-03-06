@@ -294,18 +294,69 @@
 
 /* ─── SILO Agent Chat ──────────────────────────────────────────────────────── */
 
+/* Typing indicator dots.
+   NOTE: background-color is intentionally NOT set here – it is passed via
+   inline style from the component using var(--at-send-bg) so the correct
+   theme-aware value is always used. */
 .silo-typing-dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background-color: hsl(var(--muted-foreground) / 0.45);
-  animation: silo-bounce 1.4s ease-in-out infinite both;
+  opacity: 0.35;
+  animation: silo-bounce 1.3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite both;
 }
 
 @keyframes silo-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-5px); opacity: 1; }
+  0%, 60%, 100% { transform: translateY(0)    scale(1);    opacity: 0.35; }
+  30%           { transform: translateY(-6px) scale(1.18); opacity: 0.9;  }
+}
+
+/* Pulse ring behind the S avatar */
+.silo-ai-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid;
+  /* border-color is set via inline style from the component */
+  animation: silo-ring-pulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes silo-ring-pulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+/* Shimmer skeleton line.
+   Uses --shimmer-base (passed as inline CSS var from the component)
+   for a fully theme-aware shimmer that never goes transparent. */
+.silo-shimmer-line {
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  background: var(--shimmer-base, currentColor);
+  opacity: 0.12;
+}
+
+.silo-shimmer-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--shimmer-base, currentColor) 50%,
+    transparent 100%
+  );
+  opacity: 0.55;
+  animation: silo-shimmer-slide 1.6s ease-in-out infinite;
+}
+
+@keyframes silo-shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%);  }
 }
 
 .silo-msg-enter {

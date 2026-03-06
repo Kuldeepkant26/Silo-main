@@ -271,7 +271,7 @@ export default function Home() {
       {/* Stats Section */}
       <section className="w-full max-w-full mx-auto px-[clamp(1rem,2.5vw,1.5rem)] py-[clamp(2.5rem,5vw,4rem)] bg-transparent">
         <h2 className="text-[clamp(1.25rem,calc(2.5vw+0.5rem),1.75rem)] font-bold tracking-[0.05em] text-center text-black mb-[clamp(2rem,5vw,3.75rem)] uppercase">
-          TRUSTED BY +100 CUSTOMERS
+          BUILT FOR MODERN LEGAL TEAMS
         </h2>
         <div className="grid grid-cols-3 gap-[clamp(1rem,3vw,1.875rem)] w-full max-w-[min(75rem,100%)] mx-auto max-[1024px]:grid-cols-2 max-[768px]:grid-cols-1">
           <div className="bg-[#d1d5db] rounded-[clamp(1.25rem,3vw,2rem)] p-[clamp(2rem,5vw,3.75rem)] px-[clamp(1.25rem,4vw,2.5rem)] text-center transition-transform duration-300 hover:-translate-y-1 max-[1024px]:last:col-span-2 max-[1024px]:last:max-w-[min(31.25rem,100%)] max-[1024px]:last:w-full max-[1024px]:last:mx-auto max-[768px]:last:col-span-1 max-[768px]:last:max-w-full">
@@ -336,37 +336,40 @@ export default function Home() {
 
           {/* Pro Plan */}
           <div className="p-[clamp(1.5rem,4vw,3.125rem)] px-[clamp(1.25rem,3.5vw,2.5rem)] flex flex-col border-r border-black/[0.08] max-[1024px]:border-r-0 max-[1024px]:border-b max-[1024px]:last:border-b-0">
-            <h3 className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold text-black mb-[clamp(1rem,3vw,2rem)]">
-              25€
+            <h3 className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold text-black mb-[clamp(0.5rem,1.5vw,0.75rem)]">
+              Contact Sales
             </h3>
+            <p className="text-[clamp(0.8rem,calc(1vw+0.1rem),0.9rem)] text-black/50 mb-[clamp(1rem,3vw,2rem)] leading-snug">
+              Pricing tailored to your team size and needs
+            </p>
             <ul className="list-disc pl-[clamp(1rem,2vw,1.25rem)] mb-auto flex-1">
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
                 Everything in Basic plan
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                5 accounts
+                Multiple team accounts
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Personalized attention
+                Dedicated onboarding support
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Monthly feedback
+                Priority response times
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Highlight your content
+                Advanced AI capabilities
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Unlimited access
+                Unlimited document processing
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Offers and discounts
+                Volume discounts available
               </li>
               <li className="text-[clamp(0.875rem,calc(1.2vw+0.25rem),1rem)] text-black leading-[1.6] mb-[clamp(0.375rem,1vw,0.5rem)]">
-                Enhanced security
+                Enhanced security & compliance
               </li>
             </ul>
             <button className="bg-black text-white px-[clamp(1.5rem,3vw,2.5rem)] py-[clamp(0.75rem,1.5vw,1rem)] text-[clamp(0.6875rem,calc(1vw+0.1rem),0.8125rem)] font-semibold tracking-[0.1em] uppercase rounded-full cursor-pointer transition-all duration-300 text-center mt-[clamp(1rem,3vw,2rem)] border-2 border-black hover:bg-[#333] hover:border-[#333] hover:-translate-y-[2px] hover:shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
-              TRY FOR FREE
+              CONTACT SALES
             </button>
           </div>
 

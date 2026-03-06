@@ -343,9 +343,9 @@ interface ChatSession {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-start gap-3 silo-msg-enter">
+    <div className="flex items-center gap-3 silo-msg-enter">
       {/* Avatar with expanding pulse ring */}
-      <div className="relative mt-0.5 shrink-0">
+      <div className="relative shrink-0">
         <span
           className="silo-ai-pulse-ring"
           style={{ borderColor: "var(--at-s-ring)" }}
@@ -359,7 +359,7 @@ function TypingIndicator() {
       </div>
 
       {/* Bouncing dots – floating freely, no box */}
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center gap-2">
         <span
           className="silo-typing-dot"
           style={{ background: "var(--at-send-bg)", animationDelay: "0ms" }}

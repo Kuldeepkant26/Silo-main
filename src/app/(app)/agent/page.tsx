@@ -573,6 +573,8 @@ export default function AgentPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTranscriptRef = useRef<string>("");
+  // Tracks whether we already kicked off a background pre-creation on mount
+  const hasPreCreatedRef = useRef(false);
 
   // ─── Voice Recognition ────────────────────────────────────────
 
@@ -741,6 +743,50 @@ export default function AgentPage() {
     }
   }, [input]);
 
+  // ─── Pre-create chat session on initial page load ─────────────────
+  // When the user first opens the Agent page with no existing active chat,
+  // silently initialise a new chat in the background with an empty initial
+  // message.  This ensures the very first user message – including any file
+  // attachments – goes through the reliable sendMessage() path (FormData)
+  // instead of the createChat() path which is JSON-only and drops files.
+  useEffect(() => {
+    if (activeChatId) return;            // existing session – nothing to do
+    if (!currentUser?.id) return;        // not authenticated yet
+    if (hasPreCreatedRef.current) return; // already kicked off once
+    hasPreCreatedRef.current = true;
+
+    void (async () => {
+      try {
+        const chat = await createChat({
+          title: "New Chat",
+          initialMessage: "",
+          context: {
+            ...(currentUser
+              ? {
+                  currentUser: {
+                    id: currentUser.id,
+                    name: currentUser.name ?? "",
+                    email: currentUser.email ?? "",
+                    organizationId: organizationId ?? undefined,
+                  },
+                }
+              : {}),
+          },
+        });
+        if (chat?.id) {
+          setActiveChatId(chat.id);
+          setChatSessions((prev) => [
+            { id: chat.id, title: "New Chat", updatedAt: new Date() },
+            ...prev.filter((s) => s.id !== chat.id),
+          ]);
+        }
+      } catch {
+        // Non-critical – handleSubmit will fall back to createChat inline
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
+
   // ─── File attachment helpers ───────────────────────────────────────
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
@@ -876,9 +922,13 @@ export default function AgentPage() {
         const title = text.length > 60 ? text.slice(0, 60) + "..." : text;
 
         try {
+          // Step 1: Create the chat session with an EMPTY initial message.
+          // Using an empty message here initialises the session on the backend
+          // so that document attachments are accepted from the very first real
+          // message (sent in step 2 via sendChatMessage which uses FormData).
           const chat = await createChat({
             title,
-            initialMessage: text,
+            initialMessage: "",
             context: {
               ...(currentUser
                 ? {
@@ -903,26 +953,36 @@ export default function AgentPage() {
             ...prev,
           ]);
 
+          // Step 2: Send the actual user message (with any file attachments)
+          // through sendChatMessage which uses FormData so documents are
+          // correctly received by the AI on the very first message.
           const knownIds = new Set<string>();
           if (chat.messages) {
             for (const m of chat.messages) {
               knownIds.add(m.id);
-              if (m.role === "assistant") {
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    id: m.id,
-                    role: "assistant",
-                    content: m.content,
-                    timestamp: new Date(m.createdAt),
-                  },
-                ]);
-                setIsLoading(false);
-                return;
-              }
             }
           }
           knownIds.add(userMsg.id);
+
+          const resp = await sendChatMessage(chatId, {
+            content: text,
+            ...(filesToSend.length > 0 ? { attachments: filesToSend } : {}),
+          });
+
+          if (resp && "content" in resp && resp.content) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: (resp as APIChatMessage).id ?? crypto.randomUUID(),
+                role: "assistant" as const,
+                content: resp.content as string,
+                timestamp: new Date(),
+              },
+            ]);
+            setIsLoading(false);
+            return;
+          }
+
           void pollForResponse(chatId, knownIds);
         } catch (createErr) {
           if (createErr instanceof CreateChatAIError) {

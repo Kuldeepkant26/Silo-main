@@ -476,5 +476,16 @@
   "total_and_completed_requests": "Total y solicitudes completadas",
   "untitled_request": "Solicitud sin título",
   "end_of_results": "Fin de resultados",
-  "displayed": "mostradas"
+  "displayed": "mostradas",
+  "loading_attachments": "Cargando archivos adjuntos...",
+  "failed_to_load_image": "Error al cargar la imagen",
+  "created": "Creado",
+  "start_date": "Fecha de inicio",
+  "end_date": "Fecha de fin",
+  "assigned_team": "Equipo asignado",
+  "comments": "Comentarios",
+  "no_comments_yet": "Aún no hay comentarios",
+  "no_suggestions_available": "No hay sugerencias disponibles",
+  "enhanced_versions": "Versiones mejoradas",
+  "you": "Tú"
 }

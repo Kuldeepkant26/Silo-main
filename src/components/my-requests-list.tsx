@@ -7,6 +7,7 @@ import { Info, ChevronDown, ArrowUpRight, Clock, User, Scale, FileText, CheckCir
 import { cn } from "~/lib/utils";
 import { authClient } from "~/server/auth/client";
 import { env } from "~/env";
+import { getLocaleFromCookie } from "~/lib/locale";
 
 import { Icons } from "./icons";
 import { Button } from "./ui/button";
@@ -99,6 +100,7 @@ interface Filters {
 
 export function MyRequestsList() {
   const t = useTranslations();
+  const currentLocale = getLocaleFromCookie();
   const { data: auth } = authClient.useSession();
   const organizationId = auth?.session?.activeOrganizationId;
   const userEmail = auth?.user?.email;
@@ -287,12 +289,12 @@ export function MyRequestsList() {
   // Date formatting helpers
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString(currentLocale, { month: "short", day: "numeric" });
   };
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    return date.toLocaleTimeString(currentLocale, { hour: "2-digit", minute: "2-digit", hour12: currentLocale === "en" });
   };
 
   // Loading state

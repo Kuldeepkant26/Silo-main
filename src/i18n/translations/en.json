@@ -476,5 +476,16 @@
   "total_and_completed_requests": "Total and completed requests",
   "untitled_request": "Untitled request",
   "end_of_results": "End of results",
-  "displayed": "displayed"
+  "displayed": "displayed",
+  "loading_attachments": "Loading attachments...",
+  "failed_to_load_image": "Failed to load image",
+  "created": "Created",
+  "start_date": "Start Date",
+  "end_date": "End Date",
+  "assigned_team": "Assigned Team",
+  "comments": "Comments",
+  "no_comments_yet": "No comments yet",
+  "no_suggestions_available": "No suggestions available",
+  "enhanced_versions": "Enhanced Versions",
+  "you": "You"
 }

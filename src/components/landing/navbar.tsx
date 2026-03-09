@@ -3,7 +3,79 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Globe } from "lucide-react";
 import { authClient } from "~/server/auth/client";
+import { getLocaleFromCookie, setLocaleCookie } from "~/lib/locale";
+import type { Locale } from "~/i18n/config";
+import { DEFAULT_LOCALE } from "~/i18n/config";
+
+const LOCALE_LABELS: Record<Locale, string> = {
+  en: "EN",
+  es: "ES",
+  ca: "CA",
+};
+
+// Labels translated per active locale — mirrors t("english"), t("spanish"), t("catalan")
+const LOCALE_FULL_LABELS_BY_LOCALE: Record<Locale, Record<Locale, string>> = {
+  en: { en: "English", es: "Spanish", ca: "Catalan" },
+  es: { en: "Inglés",  es: "Español", ca: "Catalán" },
+  ca: { en: "Anglès",  es: "Espanyol", ca: "Català"  },
+};
+
+function LandingLanguageSwitcher() {
+  const [currentLocale, setCurrentLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentLocale(getLocaleFromCookie());
+  }, []);
+
+  const handleChange = (locale: Locale) => {
+    if (locale !== currentLocale) {
+      setLocaleCookie(locale);
+      setDropdownOpen(false);
+      setTimeout(() => window.location.reload(), 100);
+    } else {
+      setDropdownOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setDropdownOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-[clamp(0.75rem,calc(1vw+0.2rem),0.875rem)] font-semibold tracking-[0.03em] text-black hover:opacity-70 transition-opacity"
+        aria-label="Change language"
+      >
+        <Globe className="h-4 w-4" />
+        <span>{LOCALE_LABELS[currentLocale]}</span>
+      </button>
+      {dropdownOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[1099]"
+            onClick={() => setDropdownOpen(false)}
+          />
+          <div className="absolute right-0 top-full mt-2 z-[1100] min-w-[120px] rounded-xl bg-white border border-gray-200 shadow-lg overflow-hidden">
+            {(Object.keys(LOCALE_FULL_LABELS_BY_LOCALE.en) as Locale[]).map((locale) => (
+              <button
+                key={locale}
+                onClick={() => handleChange(locale)}
+                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${
+                  locale === currentLocale
+                    ? "text-black bg-gray-50"
+                    : "text-gray-600"
+                }`}
+              >
+                {(LOCALE_FULL_LABELS_BY_LOCALE[currentLocale] ?? LOCALE_FULL_LABELS_BY_LOCALE.en)[locale]}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 interface NavbarProps {
   onGetStartedClick?: () => void;
@@ -100,6 +172,7 @@ export function Navbar({ onGetStartedClick }: NavbarProps) {
 
         {/* Desktop Right Side Actions */}
         <div className="hidden min-[769px]:flex items-center gap-[clamp(1rem,2vw,1.5rem)] flex-shrink-0">
+          <LandingLanguageSwitcher />
           {isPending ? (
             <div className="w-[120px] h-[40px]" />
           ) : isLoggedIn ? (
@@ -201,6 +274,31 @@ export function Navbar({ onGetStartedClick }: NavbarProps) {
 
           {/* Mobile Actions */}
           <div className="mt-auto pt-6 border-t border-gray-200 flex flex-col gap-3">
+            {/* Language switcher in mobile menu */}
+            <div className="flex items-center justify-between px-2 py-1">
+              <span className="text-sm font-semibold text-gray-500 tracking-[0.05em]">LANGUAGE</span>
+              <div className="flex items-center gap-2">
+                {(["en", "es", "ca"] as Locale[]).map((locale) => (
+                  <button
+                    key={locale}
+                    onClick={() => {
+                      if (locale !== getLocaleFromCookie()) {
+                        setLocaleCookie(locale);
+                        setTimeout(() => window.location.reload(), 100);
+                      }
+                      closeMenu();
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider transition-all ${
+                      locale === getLocaleFromCookie()
+                        ? "bg-black text-white"
+                        : "border border-gray-300 text-gray-500 hover:border-black hover:text-black"
+                    }`}
+                  >
+                    {locale.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
             {isPending ? (
               <div className="h-[48px]" />
             ) : isLoggedIn ? (

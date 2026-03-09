@@ -186,6 +186,7 @@ export function ReviewDetailPanel({
   hideReply = false,
 }: ReviewDetailPanelProps) {
   const t = useTranslations();
+  const currentLocale = getLocaleFromCookie();
   const { data: auth } = authClient.useSession();
   const userId = auth?.user?.id;
   const userEmail = auth?.user?.email;
@@ -743,7 +744,7 @@ export function ReviewDetailPanel({
                 )}
               </div>
               <h2 className="text-lg font-bold text-foreground leading-tight mt-2">
-                {review.title || "Untitled request"}
+                {review.title || t("untitled_request")}
               </h2>
               {review.email && (
                 <div className="flex items-center gap-1.5 mt-1.5">
@@ -758,7 +759,7 @@ export function ReviewDetailPanel({
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  Attachments
+                  {t("attachments")}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 ml-1">
                     {detailedReview.payload.attachments.length}
                   </Badge>
@@ -784,7 +785,7 @@ export function ReviewDetailPanel({
                                   }}
                                 />
                                 <div className="hidden p-4 text-center text-sm text-muted-foreground">
-                                  Failed to load image
+                                  {t("failed_to_load_image")}
                                 </div>
                               </a>
                             ) : (
@@ -808,7 +809,7 @@ export function ReviewDetailPanel({
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground text-center py-4">
-                      Loading attachments...
+                      {t("loading_attachments")}
                     </div>
                   )}
                 </div>
@@ -829,7 +830,17 @@ export function ReviewDetailPanel({
                     (detailedReview.workflowStatus || review.workflowStatus) === "REOPEN" && "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30"
                   )}
                 >
-                  {(detailedReview.workflowStatus || review.workflowStatus)?.replace(/_/g, " ")}
+                  {(() => {
+                    const ws = detailedReview.workflowStatus || review.workflowStatus;
+                    const statusKeyMap: Record<string, string> = {
+                      OPEN: t("status_open"),
+                      IN_PROGRESS: t("status_in_progress"),
+                      DONE: t("status_done"),
+                      OVERDUE: t("status_overdue"),
+                      REOPEN: t("status_reopen"),
+                    };
+                    return ws ? (statusKeyMap[ws] ?? ws.replace(/_/g, " ")) : null;
+                  })()}
                 </Badge>
               )}
               {(detailedReview.priority || review.urgency) && (
@@ -842,7 +853,15 @@ export function ReviewDetailPanel({
                     (detailedReview.priority || review.urgency) === "LOW" && "border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30"
                   )}
                 >
-                  {(detailedReview.priority || review.urgency) === "MID" ? "Medium" : (detailedReview.priority || review.urgency)} Priority
+                  {(() => {
+                    const p = detailedReview.priority || review.urgency;
+                    const priorityMap: Record<string, string> = {
+                      HIGH: t("high"),
+                      MID: t("medium"),
+                      LOW: t("low"),
+                    };
+                    return p ? `${priorityMap[p] ?? p} ${t("priority")}` : null;
+                  })()}
                 </Badge>
               )}
               {review.reviewed !== undefined && (
@@ -856,7 +875,7 @@ export function ReviewDetailPanel({
                   )}
                 >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  {review.reviewed ? "Reviewed" : "Not Reviewed"}
+                  {review.reviewed ? t("reviewed_label") : t("not_reviewed")}
                 </Badge>
               )}
             </div>
@@ -868,7 +887,7 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Category</p>
+                    <p className="text-xs text-muted-foreground">{t("category")}</p>
                     <p className="text-sm font-medium text-foreground truncate">{review.category}</p>
                   </div>
                 </div>
@@ -878,9 +897,9 @@ export function ReviewDetailPanel({
               <div className="flex items-center gap-3 px-4 py-3">
                 <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Created</p>
+                  <p className="text-xs text-muted-foreground">{t("created")}</p>
                   <p className="text-sm font-medium text-foreground">
-                    {new Date(detailedReview.created_at || review.createdAt).toLocaleDateString('en-US', { 
+                    {new Date(detailedReview.created_at || review.createdAt).toLocaleDateString(currentLocale, { 
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -896,9 +915,9 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Start Date</p>
+                    <p className="text-xs text-muted-foreground">{t("start_date")}</p>
                     <p className="text-sm font-medium text-foreground">
-                      {new Date(review.startDate).toLocaleDateString('en-US', { 
+                      {new Date(review.startDate).toLocaleDateString(currentLocale, { 
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'
@@ -913,9 +932,9 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">End Date</p>
+                    <p className="text-xs text-muted-foreground">{t("end_date")}</p>
                     <p className="text-sm font-medium text-foreground">
-                      {new Date(review.endDate).toLocaleDateString('en-US', { 
+                      {new Date(review.endDate).toLocaleDateString(currentLocale, { 
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'
@@ -930,7 +949,7 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Scale className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Legal Owner</p>
+                    <p className="text-xs text-muted-foreground">{t("legal_owner")}</p>
                     <p className="text-sm font-medium text-foreground">{review.legalName || detailedReview.legalOwnerName || detailedReview.legalOwnerId}</p>
                   </div>
                 </div>
@@ -941,7 +960,7 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <User className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Reviewer</p>
+                    <p className="text-xs text-muted-foreground">{t("reviewer")}</p>
                     <p className="text-sm font-medium text-foreground">{review.reviewerName}</p>
                   </div>
                 </div>
@@ -952,7 +971,7 @@ export function ReviewDetailPanel({
                 <div className="flex items-center gap-3 px-4 py-3">
                   <User className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Assigned Team</p>
+                    <p className="text-xs text-muted-foreground">{t("assigned_team")}</p>
                     <Badge className="bg-green-600 dark:bg-green-700 text-white rounded px-2.5 text-xs mt-0.5">
                       {detailedReview.assignedTeamName || detailedReview.assignedTeamId}
                     </Badge>
@@ -966,7 +985,7 @@ export function ReviewDetailPanel({
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  Description
+                  {t("description")}
                 </label>
                 <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-3.5 border border-border">
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -983,7 +1002,7 @@ export function ReviewDetailPanel({
                   <div className="p-1 rounded-md bg-muted shrink-0">
                     <Send className="h-3 w-3 text-muted-foreground" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">Comments</span>
+                  <span className="text-sm font-medium text-foreground">{t("comments")}</span>
                   {ticketComments.length > 0 && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 ml-1">
                       {ticketComments.length}
@@ -1011,7 +1030,7 @@ export function ReviewDetailPanel({
                     ))}
                   </div>
                 ) : ticketComments.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-3">No comments yet</p>
+                  <p className="text-xs text-muted-foreground text-center py-3">{t("no_comments_yet")}</p>
                 ) : (
                   <div className="space-y-2">
                     {ticketComments.map((c) => {
@@ -1187,7 +1206,7 @@ export function ReviewDetailPanel({
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-muted-foreground text-center py-2">No suggestions available</p>
+                        <p className="text-xs text-muted-foreground text-center py-2">{t("no_suggestions_available")}</p>
                       )}
                     </div>
                   )}
@@ -1200,7 +1219,7 @@ export function ReviewDetailPanel({
                           <div className="p-1 rounded-md bg-primary shadow-sm">
                             <Wand2 className="h-3 w-3 text-primary-foreground" />
                           </div>
-                          <span className="text-[11px] font-semibold text-foreground">Enhanced Versions</span>
+                          <span className="text-[11px] font-semibold text-foreground">{t("enhanced_versions")}</span>
                         </div>
                         <button
                           onClick={() => { setShowCommentEnhanced(false); setCommentEnhancedVersions([]); }}
@@ -1364,7 +1383,7 @@ export function ReviewDetailPanel({
                             "text-[10px] font-semibold tracking-wide",
                             isCurrentUser ? "text-muted-foreground" : "text-blue-600 dark:text-blue-400"
                           )}>
-                            {isCurrentUser ? "You" : msg.senderEmail?.split('@')[0] || msg.senderType}
+                            {isCurrentUser ? t("you") : msg.senderEmail?.split('@')[0] || msg.senderType}
                           </span>
                         </div>
                         
@@ -1471,7 +1490,7 @@ export function ReviewDetailPanel({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground text-center py-2">No suggestions available</p>
+                  <p className="text-xs text-muted-foreground text-center py-2">{t("no_suggestions_available")}</p>
                 )}
               </div>
             )}
@@ -1484,7 +1503,7 @@ export function ReviewDetailPanel({
                     <div className="p-1 rounded-md bg-primary shadow-sm">
                       <Wand2 className="h-3 w-3 text-primary-foreground" />
                     </div>
-                    <span className="text-[11px] font-semibold text-foreground">Enhanced Versions</span>
+                    <span className="text-[11px] font-semibold text-foreground">{t("enhanced_versions")}</span>
                   </div>
                   <button
                     onClick={() => {

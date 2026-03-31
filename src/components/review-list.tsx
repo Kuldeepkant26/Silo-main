@@ -180,7 +180,7 @@ export function ReviewList() {
     
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/public/form/reviewers/${organizationId}`,
+        `${API_BASE_URL}/api/internal/get-legal-owners/${organizationId}`,
         {
           method: "GET",
           headers: {
@@ -191,12 +191,13 @@ export function ReviewList() {
       );
       if (response.ok) {
         const data = await response.json();
-        setReviewers(data.reviewers || []);
+        const owners = data.users || data.legalOwners || data.owners || data.data || data;
+        setReviewers(Array.isArray(owners) ? owners : []);
       }
     } catch (error) {
       console.error("Error fetching reviewers:", error);
     }
-  }, [organizationId]);
+  }, [organizationId, authHeader]);
 
   // Fetch tickets and reviewers on mount
   useEffect(() => {
@@ -232,19 +233,6 @@ export function ReviewList() {
       .filter((c): c is string => !!c);
     return [...new Set(categories)];
   }, [tickets]);
-
-  // Get unique reviewer IDs from tickets
-  const uniqueReviewerIds = useMemo(() => {
-    const reviewerIds = tickets
-      .map((t) => t.legalOwnerId)
-      .filter((id): id is string => !!id);
-    return [...new Set(reviewerIds)];
-  }, [tickets]);
-
-  // Filter reviewers to only show those who have tickets assigned
-  const activeReviewers = useMemo(() => {
-    return reviewers.filter((reviewer) => uniqueReviewerIds.includes(reviewer.id));
-  }, [reviewers, uniqueReviewerIds]);
 
   const pendingCount = tickets.length;
 
@@ -535,17 +523,17 @@ export function ReviewList() {
           </Select>
 
           {/* Reviewer Filter */}
-          {activeReviewers.length > 0 && (
+          {reviewers.length > 0 && (
             <Select 
               value={selectedFilters.reviewer} 
               onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, reviewer: value === "all" ? "" : value }))}
             >
               <SelectTrigger className="w-[150px] rounded-full border-[#ccc]">
-                <SelectValue placeholder={t("reviewer")} />
+                <SelectValue placeholder={t("reviewer") || "Reviewer"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("all_reviewers")}</SelectItem>
-                {activeReviewers.map((reviewer) => (
+                <SelectItem value="all">{t("all_reviewers") || "All Reviewers"}</SelectItem>
+                {reviewers.map((reviewer) => (
                   <SelectItem key={reviewer.id} value={reviewer.id}>
                     {reviewer.name}
                   </SelectItem>

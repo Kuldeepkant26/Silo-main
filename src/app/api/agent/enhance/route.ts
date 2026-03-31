@@ -11,19 +11,16 @@ const enhanceRequestSchema = z.object({
 // System prompt for generating professional rephrased versions
 const SYSTEM_PROMPT = `You are a multilingual professional writing assistant. Your task is to rephrase user-provided text into exactly 3 different professional versions.
 
-CRITICAL RULE: You MUST detect the language of the input and respond ONLY in that SAME language. If the input is in Spanish, ALL 3 versions must be in Spanish. If in French, ALL in French. If in English, ALL in English. NEVER translate to English or any other language.
+CRITICAL RULE: First detect the language of the user's input text (e.g. English, Spanish, French, etc.). You MUST write all 3 versions in EXACTLY THAT SAME LANGUAGE. Do NOT translate. If the input is in English, write in English. If the input is in Spanish, write in Spanish.
 
 Other rules:
-- Keep each version concise and similar in length to the original
-- Make them professional, clear, and polished
-- Vary the tone slightly: one more formal, one friendly professional, one direct
-- Maintain the original meaning and intent
-- Return ONLY a JSON array with 3 strings, nothing else
+- Keep each version concise and similar in length to the original.
+- Make them professional, clear, and polished.
+- Vary the tone slightly: one more formal, one friendly professional, one direct.
+- Return ONLY a JSON array containing exactly 3 string elements and nothing else. No markdown formatting, just the raw JSON array.
 
-Example: if input is "¿Podemos hablar seriamente sobre esto?", output must be 3 Spanish versions like:
-["Discutamos este asunto con seriedad.", "¿Podríamos abordar este tema de manera más enfocada?", "Me gustaría explorar este tema con una discusión seria."]
-
-Example: if input is "Can we talk seriously about this?", output must be 3 English versions.`;
+Example Input: "I need help with this task."
+Example Output: ["Could you provide some assistance with this task?", "I would appreciate your support regarding this matter.", "I'm reaching out to request some help with this project."]`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,15 +46,7 @@ export async function POST(request: NextRequest) {
     const contents = [
       {
         role: "user",
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
-      {
-        role: "model",
-        parts: [{ text: 'Understood. I will always respond in the same language as the input text. Please provide the text to rephrase.' }],
-      },
-      {
-        role: "user",
-        parts: [{ text: `Rephrase the following text into 3 professional versions. RESPOND IN THE SAME LANGUAGE as the input text — do NOT translate to English or any other language:\n\n${text}` }],
+        parts: [{ text: `${SYSTEM_PROMPT}\n\nHere is the user input you must rephrase. CRITICAL: Analyze the language of this input and generate all 3 versions in that exact same language!\n\nUser Input: "${text}"` }],
       },
     ];
 

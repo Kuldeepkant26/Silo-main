@@ -52,6 +52,7 @@ import {
 import { Textarea } from "./ui/textarea";
 import { z as zod } from "zod";
 
+import { cn } from "~/lib/utils";
 import { getSessionAuthHeader } from "~/lib/api-auth";
 
 const API_BASE_URL = env.NEXT_PUBLIC_API_BASE_URL;
@@ -81,6 +82,9 @@ const internalRequestSchema = zod
     name: zod.string().min(1, { message: "Name is required" }),
     email: zod.string().email({ message: "Valid email is required" }),
     categoryId: zod.string().min(1, { message: "Category is required" }),
+    dummyDueDate: zod.date({
+      required_error: "Due Date is required",
+    }),
     summary: zod.string().min(1, { message: "Summary is required" }),
     description: zod.string().min(1, { message: "Description is required" }),
   });
@@ -114,6 +118,7 @@ export function CreateRequest() {
       name: userName,
       email: userEmail,
       categoryId: "",
+      dummyDueDate: undefined, // Will be forced to fill as it's required in schema
       summary: "",
       description: "",
     },
@@ -361,6 +366,7 @@ export function CreateRequest() {
         name: userName,
         email: userEmail,
         categoryId: "",
+        dummyDueDate: undefined,
         summary: "",
         description: "",
       });
@@ -403,6 +409,7 @@ export function CreateRequest() {
         name: userName,
         email: userEmail,
         categoryId: "",
+        dummyDueDate: undefined,
         summary: "",
         description: "",
       });
@@ -509,6 +516,48 @@ export function CreateRequest() {
                       </SelectContent>
                     </Select>
 
+                    <FormMessage className="-mt-2" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dummyDueDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Due Date*</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a desired due date</span>
+                            )}
+                            <Icons.calendar className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0))
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage className="-mt-2" />
                   </FormItem>
                 )}
